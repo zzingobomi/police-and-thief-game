@@ -3,15 +3,13 @@ import { MyRoomState } from "./schema/MyRoomState";
 
 export class MyRoom extends Room<MyRoomState> {
   onCreate(options: any) {
-    //this.roomName = options.roomName;
     this.setMetadata({ roomName: options.roomName });
     this.maxClients = options.maxClient;
     this.setState(new MyRoomState());
 
-    this.onMessage("type", (client, message) => {
-      //
-      // handle "type" message
-      //
+    this.onMessage("move", (client, data) => {
+      console.log("received message from", client.sessionId, ":", data);
+      this.state.movePlayer(client.sessionId, data);
     });
   }
 
