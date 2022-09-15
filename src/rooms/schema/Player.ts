@@ -1,24 +1,26 @@
 import { Schema, type, MapSchema } from "@colyseus/schema";
 
+class Vec3 extends Schema {
+  @type("number")
+  x: number = 0;
+
+  @type("number")
+  y: number = 0;
+
+  @type("number")
+  z: number = 0;
+}
+
 export class Player extends Schema {
-  @type("number")
-  positionX: number = 0;
-  @type("number")
-  positionY: number = 0;
-  @type("number")
-  positionZ: number = 0;
+  @type(Vec3)
+  position: Vec3 = new Vec3();
 
-  @type("number")
-  rotationX: number = 0;
-  @type("number")
-  rotationY: number = 0;
-  @type("number")
-  rotationZ: number = 0;
+  @type(Vec3)
+  rotation: Vec3 = new Vec3();
 
-  @type("number")
-  scaleX: number = 1;
-  @type("number")
-  scaleY: number = 1;
-  @type("number")
-  scaleZ: number = 1;
+  @type(Vec3)
+  scale: Vec3 = new Vec3();
+
+  @type("string")
+  currentState: string = "";
 }

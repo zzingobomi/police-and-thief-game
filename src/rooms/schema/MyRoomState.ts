@@ -6,6 +6,7 @@ export class MyRoomState extends Schema {
   players = new MapSchema<Player>();
 
   createPlayer(sessionId: string) {
+    //console.log("createPlayer: ", sessionId);
     this.players.set(sessionId, new Player());
   }
 
@@ -13,14 +14,16 @@ export class MyRoomState extends Schema {
     this.players.delete(sessionId);
   }
 
-  movePlayer(sessionId: string, movement: any) {
+  updatePlayer(sessionId: string, playerData: Player) {
     const player = this.players.get(sessionId);
-    player.positionX = movement.positionX;
-    player.positionY = movement.positionX;
-    player.positionZ = movement.positionX;
+    player.position.x = playerData.position.x;
+    player.position.y = playerData.position.y;
+    player.position.z = playerData.position.z;
 
-    player.rotationX = movement.rotationX;
-    player.rotationY = movement.rotationY;
-    player.rotationZ = movement.rotationZ;
+    player.rotation.x = playerData.rotation.x;
+    player.rotation.y = playerData.rotation.y;
+    player.rotation.z = playerData.rotation.z;
+
+    player.currentState = playerData.currentState;
   }
 }
