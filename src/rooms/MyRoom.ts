@@ -1,5 +1,23 @@
 import { Room, Client } from "colyseus";
 import { MyRoomState } from "./schema/MyRoomState";
+import { Vec3 } from "./schema/Player";
+
+const playerInitialInfo = [
+  {
+    position: {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
+  },
+  {
+    position: {
+      x: -500,
+      y: 0,
+      z: 0,
+    },
+  },
+];
 
 export class MyRoom extends Room<MyRoomState> {
   private initCount = 0;
@@ -12,8 +30,13 @@ export class MyRoom extends Room<MyRoomState> {
     this.onMessage("game.init", (client, data) => {
       this.initCount += 1;
       if (this.initCount >= this.clients.length) {
-        for (const client of this.clients) {
-          this.state.createPlayer(client.sessionId);
+        for (const [index, client] of this.clients.entries()) {
+          const initialPosition: Vec3 = new Vec3(
+            playerInitialInfo[index].position.x,
+            playerInitialInfo[index].position.y,
+            playerInitialInfo[index].position.z
+          );
+          this.state.createPlayer(client.sessionId, initialPosition);
         }
       }
     });
