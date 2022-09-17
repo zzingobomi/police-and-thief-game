@@ -41,8 +41,17 @@ export class MyRoom extends Room<MyRoomState> {
       }
     });
 
-    this.onMessage("world.update", (client, data) => {
-      this.state.updatePlayer(client.sessionId, data);
+    this.onMessage("update.position", (client, position) => {
+      this.state.updatePlayerPosition(client.sessionId, position);
+    });
+    this.onMessage("update.rotation", (client, rotation) => {
+      this.state.updatePlayerRotation(client.sessionId, rotation);
+    });
+    this.onMessage("update.scale", (client, scale) => {
+      this.state.updatePlayerScale(client.sessionId, scale);
+    });
+    this.onMessage("update.state", (client, state) => {
+      this.state.updatePlayerState(client.sessionId, state);
     });
   }
 
