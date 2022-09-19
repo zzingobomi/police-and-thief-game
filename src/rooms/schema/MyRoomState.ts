@@ -1,4 +1,5 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
+import { PlayerType } from "../MyRoom";
 import { Player, Vec3 } from "./Player";
 
 export class MyRoomState extends Schema {
@@ -7,11 +8,15 @@ export class MyRoomState extends Schema {
 
   createPlayer(
     sessionId: string,
+    playerType: PlayerType,
     initialPosition: Vec3,
     initialRotation: Vec3
   ) {
     //console.log("createPlayer: ", sessionId);
-    this.players.set(sessionId, new Player(initialPosition, initialRotation));
+    this.players.set(
+      sessionId,
+      new Player(playerType, initialPosition, initialRotation)
+    );
   }
 
   // TODO: 아직 작업 안함

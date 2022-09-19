@@ -1,4 +1,5 @@
 import { Schema, type, MapSchema } from "@colyseus/schema";
+import { PlayerType } from "../MyRoom";
 
 export class Vec3 extends Schema {
   @type("number")
@@ -25,6 +26,8 @@ export class Vec3 extends Schema {
 }
 
 export class Player extends Schema {
+  @type("string")
+  playerType: string = "";
   @type(Vec3)
   position: Vec3 = new Vec3(0, 0, 0);
 
@@ -37,10 +40,11 @@ export class Player extends Schema {
   @type("string")
   currentState: string = "";
 
-  constructor(position: Vec3, rotation: Vec3) {
+  constructor(playerType: PlayerType, position: Vec3, rotation: Vec3) {
     super();
     this.position.Set(position.x, position.y, position.z);
     this.rotation.Set(rotation.x, rotation.y, rotation.z);
+    this.playerType = playerType;
   }
 
   SetPosition(position: Vec3) {

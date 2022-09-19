@@ -3,13 +3,60 @@ import { policeInitialInfo, thiefInitialInfo } from "./PlayerInitialInfo";
 import { MyRoomState } from "./schema/MyRoomState";
 import { Vec3 } from "./schema/Player";
 
+export enum PlayerType {
+  POLICE = "Police",
+  THIEF = "Thief",
+}
+
+export enum ReadyState {
+  NOT_YET,
+  READY,
+}
+
 export class MyRoom extends Room<MyRoomState> {
+  private readyCount = 0;
   private initCount = 0;
 
   onCreate(options: any) {
     this.setMetadata({ roomName: options.roomName });
     this.maxClients = options.maxClient;
     this.setState(new MyRoomState());
+
+    this.onMessage("game.ready", (client, data) => {
+      client.userData.readyState = ReadyState.READY;
+      const notYetCount = this.clients.filter(
+        (client) => client.userData.readyState === ReadyState.NOT_YET
+      ).length;
+      if (notYetCount <= 0) {
+        this.broadcast("game.start");
+      }
+
+      this.broadcast(
+        "ready.update",
+        this.clients.map((client) => {
+          return {
+            playerType: client.userData.playerType,
+            sessionId: client.sessionId,
+            readyState: client.readyState,
+          };
+        })
+      );
+    });
+
+    this.onMessage("game.cancel.ready", (client, data) => {
+      client.userData.readyState = ReadyState.NOT_YET;
+
+      this.broadcast(
+        "ready.update",
+        this.clients.map((client) => {
+          return {
+            playerType: client.userData.playerType,
+            sessionId: client.sessionId,
+            readyState: client.readyState,
+          };
+        })
+      );
+    });
 
     this.onMessage("game.init", (client, data) => {
       this.initCount += 1;
@@ -27,6 +74,7 @@ export class MyRoom extends Room<MyRoomState> {
           );
           this.state.createPlayer(
             client.sessionId,
+            client.userData.playerType,
             initialPosition,
             initialRotation
           );
@@ -50,10 +98,23 @@ export class MyRoom extends Room<MyRoomState> {
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
-    //this.state.createPlayer(client.sessionId);
+    client.userData = {
+      playerType: PlayerType.POLICE,
+      readyState: ReadyState.NOT_YET,
+    };
+    this.clients.length % 2 === 0
+      ? (client.userData.playerType = PlayerType.THIEF)
+      : (client.userData.playerType = PlayerType.POLICE);
+
     this.broadcast(
       "joined",
-      this.clients.map((client) => client.sessionId)
+      this.clients.map((client) => {
+        return {
+          playerType: client.userData.playerType,
+          sessionId: client.sessionId,
+          readyState: client.readyState,
+        };
+      })
     );
   }
 
