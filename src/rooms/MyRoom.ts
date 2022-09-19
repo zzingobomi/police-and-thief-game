@@ -1,23 +1,7 @@
 import { Room, Client } from "colyseus";
+import { policeInitialInfo, thiefInitialInfo } from "./PlayerInitialInfo";
 import { MyRoomState } from "./schema/MyRoomState";
 import { Vec3 } from "./schema/Player";
-
-const playerInitialInfo = [
-  {
-    position: {
-      x: 0,
-      y: 0,
-      z: 0,
-    },
-  },
-  {
-    position: {
-      x: -500,
-      y: 0,
-      z: 0,
-    },
-  },
-];
 
 export class MyRoom extends Room<MyRoomState> {
   private initCount = 0;
@@ -32,11 +16,20 @@ export class MyRoom extends Room<MyRoomState> {
       if (this.initCount >= this.clients.length) {
         for (const [index, client] of this.clients.entries()) {
           const initialPosition: Vec3 = new Vec3(
-            playerInitialInfo[index].position.x,
-            playerInitialInfo[index].position.y,
-            playerInitialInfo[index].position.z
+            policeInitialInfo[index].position.x,
+            policeInitialInfo[index].position.y,
+            policeInitialInfo[index].position.z
           );
-          this.state.createPlayer(client.sessionId, initialPosition);
+          const initialRotation: Vec3 = new Vec3(
+            policeInitialInfo[index].rotation.x,
+            policeInitialInfo[index].rotation.y,
+            policeInitialInfo[index].rotation.z
+          );
+          this.state.createPlayer(
+            client.sessionId,
+            initialPosition,
+            initialRotation
+          );
         }
       }
     });

@@ -37,9 +37,10 @@ export class Player extends Schema {
   @type("string")
   currentState: string = "";
 
-  constructor(position: Vec3) {
+  constructor(position: Vec3, rotation: Vec3) {
     super();
     this.position.Set(position.x, position.y, position.z);
+    this.rotation.Set(rotation.x, rotation.y, rotation.z);
   }
 
   SetPosition(position: Vec3) {

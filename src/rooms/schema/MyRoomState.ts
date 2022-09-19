@@ -5,9 +5,13 @@ export class MyRoomState extends Schema {
   @type({ map: Player })
   players = new MapSchema<Player>();
 
-  createPlayer(sessionId: string, initialInfo: Vec3) {
+  createPlayer(
+    sessionId: string,
+    initialPosition: Vec3,
+    initialRotation: Vec3
+  ) {
     //console.log("createPlayer: ", sessionId);
-    this.players.set(sessionId, new Player(initialInfo));
+    this.players.set(sessionId, new Player(initialPosition, initialRotation));
   }
 
   // TODO: 아직 작업 안함
