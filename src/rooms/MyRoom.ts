@@ -38,6 +38,7 @@ export class MyRoom extends Room<MyRoomState> {
             playerType: client.userData.playerType,
             sessionId: client.sessionId,
             prepareState: client.userData.prepareState,
+            nickname: client.userData.nickname,
           };
         })
       );
@@ -53,6 +54,7 @@ export class MyRoom extends Room<MyRoomState> {
             playerType: client.userData.playerType,
             sessionId: client.sessionId,
             prepareState: client.userData.prepareState,
+            nickname: client.userData.nickname,
           };
         })
       );
@@ -101,6 +103,7 @@ export class MyRoom extends Room<MyRoomState> {
     client.userData = {
       playerType: PlayerType.POLICE,
       prepareState: PrepareState.PREPARE,
+      nickname: options.nickname,
     };
     this.clients.length % 2 === 0
       ? (client.userData.playerType = PlayerType.THIEF)
@@ -113,6 +116,7 @@ export class MyRoom extends Room<MyRoomState> {
           playerType: client.userData.playerType,
           sessionId: client.sessionId,
           prepareState: client.userData.prepareState,
+          nickname: client.userData.nickname,
         };
       })
     );
@@ -128,6 +132,7 @@ export class MyRoom extends Room<MyRoomState> {
           playerType: client.userData.playerType,
           sessionId: client.sessionId,
           prepareState: client.userData.prepareState,
+          nickname: client.userData.nickname,
         };
       })
     );
