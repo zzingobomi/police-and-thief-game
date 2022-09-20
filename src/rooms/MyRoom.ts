@@ -8,9 +8,9 @@ export enum PlayerType {
   THIEF = "Thief",
 }
 
-export enum ReadyState {
-  NOT_YET,
-  READY,
+export enum PrepareState {
+  PREPARE = "Prepare",
+  READY = "Ready",
 }
 
 export class MyRoom extends Room<MyRoomState> {
@@ -23,11 +23,11 @@ export class MyRoom extends Room<MyRoomState> {
     this.setState(new MyRoomState());
 
     this.onMessage("game.ready", (client, data) => {
-      client.userData.readyState = ReadyState.READY;
-      const notYetCount = this.clients.filter(
-        (client) => client.userData.readyState === ReadyState.NOT_YET
+      client.userData.prepareState = PrepareState.READY;
+      const prepareCount = this.clients.filter(
+        (client) => client.userData.prepareState === PrepareState.PREPARE
       ).length;
-      if (notYetCount <= 0) {
+      if (prepareCount <= 0) {
         this.broadcast("game.start");
       }
 
@@ -37,14 +37,14 @@ export class MyRoom extends Room<MyRoomState> {
           return {
             playerType: client.userData.playerType,
             sessionId: client.sessionId,
-            readyState: client.readyState,
+            prepareState: client.userData.prepareState,
           };
         })
       );
     });
 
     this.onMessage("game.cancel.ready", (client, data) => {
-      client.userData.readyState = ReadyState.NOT_YET;
+      client.userData.prepareState = PrepareState.PREPARE;
 
       this.broadcast(
         "ready.update",
@@ -52,7 +52,7 @@ export class MyRoom extends Room<MyRoomState> {
           return {
             playerType: client.userData.playerType,
             sessionId: client.sessionId,
-            readyState: client.readyState,
+            prepareState: client.userData.prepareState,
           };
         })
       );
@@ -100,7 +100,7 @@ export class MyRoom extends Room<MyRoomState> {
     console.log(client.sessionId, "joined!");
     client.userData = {
       playerType: PlayerType.POLICE,
-      readyState: ReadyState.NOT_YET,
+      prepareState: PrepareState.PREPARE,
     };
     this.clients.length % 2 === 0
       ? (client.userData.playerType = PlayerType.THIEF)
@@ -112,7 +112,7 @@ export class MyRoom extends Room<MyRoomState> {
         return {
           playerType: client.userData.playerType,
           sessionId: client.sessionId,
-          readyState: client.readyState,
+          prepareState: client.userData.prepareState,
         };
       })
     );
