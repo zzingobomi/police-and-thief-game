@@ -120,9 +120,16 @@ export class MyRoom extends Room<MyRoomState> {
 
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
+    this.state.removePlayer(client.sessionId);
     this.broadcast(
       "left",
-      this.clients.map((client) => client.sessionId)
+      this.clients.map((client) => {
+        return {
+          playerType: client.userData.playerType,
+          sessionId: client.sessionId,
+          prepareState: client.userData.prepareState,
+        };
+      })
     );
   }
 

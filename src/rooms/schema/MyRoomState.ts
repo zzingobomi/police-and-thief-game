@@ -19,7 +19,6 @@ export class MyRoomState extends Schema {
     );
   }
 
-  // TODO: 아직 작업 안함
   removePlayer(sessionId: string) {
     this.players.delete(sessionId);
   }
