@@ -78,7 +78,8 @@ export class MyRoom extends Room<MyRoomState> {
             client.sessionId,
             client.userData.playerType,
             initialPosition,
-            initialRotation
+            initialRotation,
+            client.userData.nickname
           );
         }
       }

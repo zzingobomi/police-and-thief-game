@@ -10,12 +10,13 @@ export class MyRoomState extends Schema {
     sessionId: string,
     playerType: PlayerType,
     initialPosition: Vec3,
-    initialRotation: Vec3
+    initialRotation: Vec3,
+    nickname: string
   ) {
     //console.log("createPlayer: ", sessionId);
     this.players.set(
       sessionId,
-      new Player(playerType, initialPosition, initialRotation)
+      new Player(playerType, initialPosition, initialRotation, nickname)
     );
   }
 

@@ -28,6 +28,7 @@ export class Vec3 extends Schema {
 export class Player extends Schema {
   @type("string")
   playerType: string = "";
+
   @type(Vec3)
   position: Vec3 = new Vec3(0, 0, 0);
 
@@ -40,11 +41,20 @@ export class Player extends Schema {
   @type("string")
   currentState: string = "";
 
-  constructor(playerType: PlayerType, position: Vec3, rotation: Vec3) {
+  @type("string")
+  nickname: string = "";
+
+  constructor(
+    playerType: PlayerType,
+    position: Vec3,
+    rotation: Vec3,
+    nickname: string
+  ) {
     super();
     this.position.Set(position.x, position.y, position.z);
     this.rotation.Set(rotation.x, rotation.y, rotation.z);
     this.playerType = playerType;
+    this.nickname = nickname;
   }
 
   SetPosition(position: Vec3) {
