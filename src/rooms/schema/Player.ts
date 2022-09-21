@@ -11,11 +11,19 @@ export class Vec3 extends Schema {
   @type("number")
   z: number = 0;
 
-  constructor(x: number, y: number, z: number) {
+  constructor(x: number, y: number, z: number);
+  constructor(obj: any);
+  constructor(...args: Array<any>) {
     super();
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    if (args.length === 1) {
+      this.x = args[0].x;
+      this.y = args[0].y;
+      this.z = args[0].z;
+    } else {
+      this.x = args[0];
+      this.y = args[1];
+      this.z = args[2];
+    }
   }
 
   Set(x: number, y: number, z: number) {

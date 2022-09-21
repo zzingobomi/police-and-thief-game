@@ -14,7 +14,6 @@ export enum PrepareState {
 }
 
 export class MyRoom extends Room<MyRoomState> {
-  private readyCount = 0;
   private initCount = 0;
 
   onCreate(options: any) {
@@ -63,24 +62,42 @@ export class MyRoom extends Room<MyRoomState> {
     this.onMessage("game.init", (client, data) => {
       this.initCount += 1;
       if (this.initCount >= this.clients.length) {
-        for (const [index, client] of this.clients.entries()) {
-          const initialPosition: Vec3 = new Vec3(
-            policeInitialInfo[index].position.x,
-            policeInitialInfo[index].position.y,
-            policeInitialInfo[index].position.z
-          );
-          const initialRotation: Vec3 = new Vec3(
-            policeInitialInfo[index].rotation.x,
-            policeInitialInfo[index].rotation.y,
-            policeInitialInfo[index].rotation.z
-          );
-          this.state.createPlayer(
-            client.sessionId,
-            client.userData.playerType,
-            initialPosition,
-            initialRotation,
-            client.userData.nickname
-          );
+        let policeCount = 0,
+          thiefCount = 0;
+        for (const client of this.clients) {
+          if (client.userData.playerType === PlayerType.POLICE) {
+            const initialPosition: Vec3 = new Vec3(
+              policeInitialInfo[policeCount].position
+            );
+            const initialRotation: Vec3 = new Vec3(
+              policeInitialInfo[policeCount].rotation
+            );
+            this.state.createPlayer(
+              client.sessionId,
+              client.userData.playerType,
+              initialPosition,
+              initialRotation,
+              client.userData.nickname
+            );
+
+            policeCount++;
+          } else {
+            const initialPosition: Vec3 = new Vec3(
+              thiefInitialInfo[thiefCount].position
+            );
+            const initialRotation: Vec3 = new Vec3(
+              thiefInitialInfo[thiefCount].rotation
+            );
+            this.state.createPlayer(
+              client.sessionId,
+              client.userData.playerType,
+              initialPosition,
+              initialRotation,
+              client.userData.nickname
+            );
+
+            thiefCount++;
+          }
         }
       }
     });
