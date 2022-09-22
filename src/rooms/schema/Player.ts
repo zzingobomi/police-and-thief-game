@@ -52,6 +52,9 @@ export class Player extends Schema {
   @type("string")
   nickname: string = "";
 
+  @type("boolean")
+  alive: boolean = true;
+
   constructor(
     playerType: PlayerType,
     position: Vec3,

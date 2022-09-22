@@ -40,4 +40,8 @@ export class MyRoomState extends Schema {
     const player = this.players.get(sessionId);
     player.currentState = state;
   }
+  diePlayer(sessionId: string) {
+    const player = this.players.get(sessionId);
+    player.alive = false;
+  }
 }
