@@ -16,9 +16,13 @@ export enum PrepareState {
 export class MyRoom extends Room<MyRoomState> {
   private initCount = 0;
   private playTime = 0; // minutes
+  private timeoutId: NodeJS.Timeout;
 
   onCreate(options: any) {
-    this.setMetadata({ roomName: options.roomName });
+    this.setMetadata({
+      roomName: options.roomName,
+      playTime: options.playTime,
+    });
     this.maxClients = options.maxClient;
     this.playTime = options.playTime;
     this.setState(new MyRoomState());
@@ -29,7 +33,11 @@ export class MyRoom extends Room<MyRoomState> {
         (client) => client.userData.prepareState === PrepareState.PREPARE
       ).length;
       if (prepareCount <= 0) {
-        this.broadcast("game.start", Date.now() + this.playTime * 60000);
+        const endTime = Date.now() + this.playTime * 60000;
+        this.broadcast("game.start", endTime);
+        this.timeoutId = setTimeout(() => {
+          this.checkGameResult(true);
+        }, this.playTime * 6000);
       }
 
       this.broadcast(
@@ -118,10 +126,12 @@ export class MyRoom extends Room<MyRoomState> {
     });
 
     this.onMessage("catch.thief", (client, sessionId) => {
-      // 도둑 수 줄이기
-      // 게임 승패 판정 (마지막 도둑인가?)
-
       this.state.diePlayer(sessionId);
+
+      const thiefCount = this.state.getAliveThiefCount();
+      this.broadcast("upate.thief", thiefCount);
+
+      this.checkGameResult(false);
     });
   }
 
@@ -167,5 +177,19 @@ export class MyRoom extends Room<MyRoomState> {
 
   onDispose() {
     console.log("room", this.roomId, "disposing...");
+  }
+
+  checkGameResult(timeout: boolean) {
+    if (timeout) {
+      // 도둑 승리
+      this.broadcast("game.result", PlayerType.THIEF);
+    } else {
+      const thiefCount = this.state.getAliveThiefCount();
+      if (thiefCount <= 0) {
+        // 경찰 승리
+        this.broadcast("game.result", PlayerType.POLICE);
+        clearTimeout(this.timeoutId);
+      }
+    }
   }
 }

@@ -44,4 +44,14 @@ export class MyRoomState extends Schema {
     const player = this.players.get(sessionId);
     player.alive = false;
   }
+
+  getAliveThiefCount() {
+    let thiefCount = 0;
+    for (const [_, player] of this.players) {
+      if (player.playerType === PlayerType.THIEF && player.alive) {
+        thiefCount++;
+      }
+    }
+    return thiefCount;
+  }
 }
