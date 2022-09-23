@@ -37,7 +37,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.broadcast("game.start", endTime);
         this.timeoutId = setTimeout(() => {
           this.checkGameResult(true);
-        }, this.playTime * 6000);
+        }, this.playTime * 60000);
       }
 
       this.broadcast(
