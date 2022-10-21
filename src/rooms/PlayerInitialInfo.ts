@@ -53,24 +53,14 @@ export const thiefInitialInfo = [
   {
     position: {
       x: -2200,
-      y: 0,
-      z: 1550,
+      y: 250,
+      z: -2500,
     },
     rotation: {
       x: 0,
-      y: 3.14 / 2,
+      y: 3.14 * 2,
       z: 0,
     },
-    // position: {
-    //   x: -2200,
-    //   y: 250,
-    //   z: -2500,
-    // },
-    // rotation: {
-    //   x: 0,
-    //   y: 3.14 * 2,
-    //   z: 0,
-    // },
   },
   {
     position: {

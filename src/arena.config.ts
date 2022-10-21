@@ -1,6 +1,7 @@
 import Arena from "@colyseus/arena";
 import { monitor } from "@colyseus/monitor";
 import { LobbyRoom } from "colyseus";
+import { MetaRoom } from "./rooms/MetaRoom";
 
 /**
  * Import your Room files
@@ -17,6 +18,7 @@ export default Arena({
      * Define your room handlers:
      */
     gameServer.define("my_room", MyRoom).enableRealtimeListing();
+    gameServer.define("meta_room", MetaRoom).enableRealtimeListing();
   },
 
   initializeExpress: (app) => {
