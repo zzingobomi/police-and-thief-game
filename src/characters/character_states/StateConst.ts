@@ -1,0 +1,9 @@
+export const STATE_Idle = "Idle";
+export const STATE_IdleRotateLeft = "IdleRotateLeft";
+export const STATE_IdleRotateRight = "IdleRotateRight";
+export const STATE_StartWalkBackLeft = "StartWalkBackLeft";
+export const STATE_StartWalkBackRight = "StartWalkBackRight";
+export const STATE_StartWalkLeft = "StartWalkLeft";
+export const STATE_StartWalkRight = "StartWalkRight";
+export const STATE_StartWalkForward = "StartWalkForward";
+export const STATE_Walk = "Walk";

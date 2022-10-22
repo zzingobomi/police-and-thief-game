@@ -1,10 +1,10 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
 import { PlayerType } from "../MyRoom";
-import { Player, Vec3 } from "./Player";
+import { OldPlayer, Vec3 } from "./OldPlayer";
 
 export class MyRoomState extends Schema {
-  @type({ map: Player })
-  players = new MapSchema<Player>();
+  @type({ map: OldPlayer })
+  players = new MapSchema<OldPlayer>();
 
   createPlayer(
     sessionId: string,
@@ -16,7 +16,7 @@ export class MyRoomState extends Schema {
     //console.log("createPlayer: ", sessionId);
     this.players.set(
       sessionId,
-      new Player(playerType, initialPosition, initialRotation, nickname)
+      new OldPlayer(playerType, initialPosition, initialRotation, nickname)
     );
   }
 
