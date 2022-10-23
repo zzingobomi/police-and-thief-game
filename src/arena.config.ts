@@ -1,6 +1,7 @@
 import Arena from "@colyseus/arena";
 import { monitor } from "@colyseus/monitor";
 import { LobbyRoom } from "colyseus";
+import { WorldDebug } from "./debug/WorldDebug";
 import { MetaRoom } from "./rooms/MetaRoom";
 
 /**
@@ -35,6 +36,11 @@ export default Arena({
      * Read more: https://docs.colyseus.io/tools/monitor/
      */
     app.use("/colyseus", monitor());
+
+    /**
+     * DebugWorld
+     */
+    app.use("/debug", WorldDebug());
   },
 
   beforeListen: () => {
