@@ -3,28 +3,18 @@ import * as CANNON from "cannon-es";
 import * as THREE from "three";
 import { Space } from "../enums/Space";
 import { SimulationFrame } from "../physics/colliders/spring_simulation/SimulationFrame";
-import { Vec3, Vec4 } from "../rooms/schema/Player";
 import { StartWalkBackLeft } from "../characters/character_states/StartWalkBackLeft";
 import { Character } from "../characters/Character";
 import { Idle } from "../characters/character_states/Idle";
 import { Walk } from "../characters/character_states/Walk";
-import {
-  STATE_Idle,
-  STATE_IdleRotateLeft,
-  STATE_IdleRotateRight,
-  STATE_StartWalkBackLeft,
-  STATE_StartWalkBackRight,
-  STATE_StartWalkForward,
-  STATE_StartWalkLeft,
-  STATE_StartWalkRight,
-  STATE_Walk,
-} from "../characters/character_states/StateConst";
 import { StartWalkBackRight } from "../characters/character_states/StartWalkBackRight";
 import { StartWalkLeft } from "../characters/character_states/StartWalkLeft";
 import { StartWalkRight } from "../characters/character_states/StartWalkRight";
 import { StartWalkForward } from "../characters/character_states/StartWalkForward";
 import { IdleRotateLeft } from "../characters/character_states/IdleRotateLeft";
 import { IdleRotateRight } from "../characters/character_states/IdleRotateRight";
+import { StateType } from "../enums/StateType";
+import { Vec3, Vec4 } from "../rooms/schema/Vector";
 
 interface Face3 {
   a: number;
@@ -300,25 +290,25 @@ export function toArrayBuffer(buf: any) {
   return ab;
 }
 
-export function characterStateFactory(stateName: string, character: Character) {
-  switch (stateName) {
-    case STATE_Idle:
+export function characterStateFactory(type: StateType, character: Character) {
+  switch (type) {
+    case StateType.Idle:
       return new Idle(character);
-    case STATE_IdleRotateLeft:
+    case StateType.IdleRotateLeft:
       return new IdleRotateLeft(character);
-    case STATE_IdleRotateRight:
+    case StateType.IdleRotateRight:
       return new IdleRotateRight(character);
-    case STATE_StartWalkBackLeft:
+    case StateType.StartWalkBackLeft:
       return new StartWalkBackLeft(character);
-    case STATE_StartWalkBackRight:
+    case StateType.StartWalkBackRight:
       return new StartWalkBackRight(character);
-    case STATE_StartWalkLeft:
+    case StateType.StartWalkLeft:
       return new StartWalkLeft(character);
-    case STATE_StartWalkRight:
+    case StateType.StartWalkRight:
       return new StartWalkRight(character);
-    case STATE_StartWalkForward:
+    case StateType.StartWalkForward:
       return new StartWalkForward(character);
-    case STATE_Walk:
+    case StateType.Walk:
       return new Walk(character);
     default:
       return new Idle(character);

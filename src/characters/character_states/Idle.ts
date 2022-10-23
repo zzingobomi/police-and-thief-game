@@ -1,10 +1,11 @@
+import { StateType } from "../../enums/StateType";
 import { Character } from "../Character";
 import { CharacterStateBase } from "./CharacterStateBase";
 import { Walk } from "./Walk";
 
 export class Idle extends CharacterStateBase {
   constructor(character: Character) {
-    super(character);
+    super(character, StateType.Idle);
 
     this.character.velocitySimulator.damping = 0.6;
     this.character.velocitySimulator.mass = 10;

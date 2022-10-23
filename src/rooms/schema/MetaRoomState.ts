@@ -1,5 +1,6 @@
 import { Schema, MapSchema, type } from "@colyseus/schema";
-import { Player, Vec3, Vec4 } from "./Player";
+import { Player } from "./Player";
+import { Vec3, Vec4 } from "./Vector";
 
 export class MetaRoomState extends Schema {
   @type({ map: Player })
@@ -36,5 +37,10 @@ export class MetaRoomState extends Schema {
   updatePlayerScale(sessionId: string, scale: Vec3) {
     const player = this.players.get(sessionId);
     if (player) player.scale.Set(scale.x, scale.y, scale.z);
+  }
+
+  updatePlayerState(sessionId: string, name: string) {
+    const player = this.players.get(sessionId);
+    if (player) player.SetStateName(name);
   }
 }

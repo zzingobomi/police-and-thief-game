@@ -139,6 +139,11 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   public setState(state: ICharacterState): void {
     this.charState = state;
     this.charState.onInputChange();
+
+    PubSub.publish(SignalType.UPDATE_PLAYER_STATE, {
+      sessionId: this.sessionId,
+      name: this.charState.name,
+    });
   }
 
   public addToWorld(world: World) {

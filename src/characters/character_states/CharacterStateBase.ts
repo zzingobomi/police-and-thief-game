@@ -1,20 +1,16 @@
 import * as Utils from "../../utils/FunctionLibrary";
 import { Character } from "../Character";
 import { ICharacterState } from "../../interfaces/ICharacterState";
-import {
-  STATE_StartWalkBackLeft,
-  STATE_StartWalkBackRight,
-  STATE_StartWalkForward,
-  STATE_StartWalkLeft,
-  STATE_StartWalkRight,
-} from "./StateConst";
+import { StateType } from "../../enums/StateType";
 
 export abstract class CharacterStateBase implements ICharacterState {
+  public name: string;
   public character: Character;
   public timer: number;
   public animationLength: number;
 
-  constructor(character: Character) {
+  constructor(character: Character, name: string) {
+    this.name = name;
     this.character = character;
 
     this.character.velocitySimulator.damping =
@@ -80,23 +76,26 @@ export abstract class CharacterStateBase implements ICharacterState {
     );
     if (angle > range * 0.8) {
       this.character.setState(
-        Utils.characterStateFactory(STATE_StartWalkBackLeft, this.character)
+        Utils.characterStateFactory(StateType.StartWalkBackLeft, this.character)
       );
     } else if (angle < -range * 0.8) {
       this.character.setState(
-        Utils.characterStateFactory(STATE_StartWalkBackRight, this.character)
+        Utils.characterStateFactory(
+          StateType.StartWalkBackRight,
+          this.character
+        )
       );
     } else if (angle > range * 0.3) {
       this.character.setState(
-        Utils.characterStateFactory(STATE_StartWalkLeft, this.character)
+        Utils.characterStateFactory(StateType.StartWalkLeft, this.character)
       );
     } else if (angle < -range * 0.3) {
       this.character.setState(
-        Utils.characterStateFactory(STATE_StartWalkRight, this.character)
+        Utils.characterStateFactory(StateType.StartWalkRight, this.character)
       );
     } else {
       this.character.setState(
-        Utils.characterStateFactory(STATE_StartWalkForward, this.character)
+        Utils.characterStateFactory(StateType.StartWalkForward, this.character)
       );
     }
   }

@@ -1,18 +1,11 @@
+import { StateType } from "../../enums/StateType";
 import * as Utils from "../../utils/FunctionLibrary";
 import { Character } from "../Character";
 import { CharacterStateBase } from "./CharacterStateBase";
-import { Idle } from "./Idle";
-import {
-  STATE_Idle,
-  STATE_IdleRotateLeft,
-  STATE_IdleRotateRight,
-  STATE_Walk,
-} from "./StateConst";
-import { Walk } from "./Walk";
 
 export class StartWalkBase extends CharacterStateBase {
-  constructor(character: Character) {
-    super(character);
+  constructor(character: Character, name: string) {
+    super(character, name);
 
     this.character.rotationSimulator.mass = 20;
     this.character.rotationSimulator.damping = 0.7;
@@ -25,7 +18,7 @@ export class StartWalkBase extends CharacterStateBase {
 
     if (this.animationEnded(delta)) {
       this.character.setState(
-        Utils.characterStateFactory(STATE_Walk, this.character)
+        Utils.characterStateFactory(StateType.Walk, this.character)
       );
     }
 
@@ -44,20 +37,26 @@ export class StartWalkBase extends CharacterStateBase {
 
         if (angle > Math.PI * 0.4) {
           this.character.setState(
-            Utils.characterStateFactory(STATE_IdleRotateLeft, this.character)
+            Utils.characterStateFactory(
+              StateType.IdleRotateLeft,
+              this.character
+            )
           );
         } else if (angle < -Math.PI * 0.4) {
           this.character.setState(
-            Utils.characterStateFactory(STATE_IdleRotateRight, this.character)
+            Utils.characterStateFactory(
+              StateType.IdleRotateRight,
+              this.character
+            )
           );
         } else {
           this.character.setState(
-            Utils.characterStateFactory(STATE_Idle, this.character)
+            Utils.characterStateFactory(StateType.Idle, this.character)
           );
         }
       } else {
         this.character.setState(
-          Utils.characterStateFactory(STATE_Idle, this.character)
+          Utils.characterStateFactory(StateType.Idle, this.character)
         );
       }
     }

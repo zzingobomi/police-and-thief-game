@@ -13,35 +13,8 @@ export class MetaRoom extends Room<MetaRoomState> {
 
     this.setState(new MetaRoomState());
 
-    this.onMessage("key.input", (client, data) => {
-      //console.log("key.input: ", client.sessionId, data);
-      this.world.keyinputCharacter(client.sessionId, data);
-      //this.state.movePlayer(client.sessionId, data);
-    });
-
-    this.onMessage("view.update", (client, data) => {
-      //console.log("view.update: ", client.sessionId, data);
-      this.world.viewUpdateCharacter(client.sessionId, data);
-    });
-
-    PubSub.subscribe(SignalType.UPDATE_PLAYER_POSITION, (msg, data) => {
-      this.state.updatePlayerPosition(
-        data.sessionId,
-        Utils.three2Vec3(data.position)
-      );
-    });
-    PubSub.subscribe(SignalType.UPDATE_PLAYER_QUATERNION, (msg, data) => {
-      this.state.updatePlayerQuaternion(
-        data.sessionId,
-        Utils.three2Vec4(data.quaternion)
-      );
-    });
-    PubSub.subscribe(SignalType.UPDATE_PLAYER_SCALE, (msg, data) => {
-      this.state.updatePlayerScale(
-        data.sessionId,
-        Utils.three2Vec3(data.scale)
-      );
-    });
+    this.registOnMessages();
+    this.registSubscribes();
   }
 
   onJoin(client: Client) {
@@ -62,5 +35,42 @@ export class MetaRoom extends Room<MetaRoomState> {
 
   onDispose() {
     console.log("Dispose MetaRoom");
+  }
+
+  registOnMessages() {
+    this.onMessage("key.input", (client, data) => {
+      //console.log("key.input: ", client.sessionId, data);
+      this.world.keyinputCharacter(client.sessionId, data);
+      //this.state.movePlayer(client.sessionId, data);
+    });
+
+    this.onMessage("view.update", (client, data) => {
+      //console.log("view.update: ", client.sessionId, data);
+      this.world.viewUpdateCharacter(client.sessionId, data);
+    });
+  }
+
+  registSubscribes() {
+    PubSub.subscribe(SignalType.UPDATE_PLAYER_POSITION, (msg, data) => {
+      this.state.updatePlayerPosition(
+        data.sessionId,
+        Utils.three2Vec3(data.position)
+      );
+    });
+    PubSub.subscribe(SignalType.UPDATE_PLAYER_QUATERNION, (msg, data) => {
+      this.state.updatePlayerQuaternion(
+        data.sessionId,
+        Utils.three2Vec4(data.quaternion)
+      );
+    });
+    PubSub.subscribe(SignalType.UPDATE_PLAYER_SCALE, (msg, data) => {
+      this.state.updatePlayerScale(
+        data.sessionId,
+        Utils.three2Vec3(data.scale)
+      );
+    });
+    PubSub.subscribe(SignalType.UPDATE_PLAYER_STATE, (msg, data) => {
+      this.state.updatePlayerState(data.sessionId, data.name);
+    });
   }
 }
