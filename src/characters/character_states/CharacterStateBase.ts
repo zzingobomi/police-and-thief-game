@@ -23,6 +23,7 @@ export abstract class CharacterStateBase implements ICharacterState {
     this.character.rotationSimulator.mass =
       this.character.defaultRotationSimulatorMass;
 
+    this.character.arcadeVelocityIsAdditive = false;
     this.character.setArcadeVelocityInfluence(1, 0, 1);
 
     this.timer = 0;
@@ -68,6 +69,14 @@ export abstract class CharacterStateBase implements ICharacterState {
     );
   }
 
+  public fallInAir(): void {
+    if (!this.character.rayHasHit) {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.Falling, this.character)
+      );
+    }
+  }
+
   public setAppropriateStartWalkState() {
     const range = Math.PI;
     const angle = Utils.getSignedAngleBetweenVectors(
@@ -96,6 +105,34 @@ export abstract class CharacterStateBase implements ICharacterState {
     } else {
       this.character.setState(
         Utils.characterStateFactory(StateType.StartWalkForward, this.character)
+      );
+    }
+  }
+
+  public setAppropriateDropState(): void {
+    if (this.character.groundImpactData.y < -6) {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.DropRolling, this.character)
+      );
+    } else if (this.anyDirection()) {
+      if (this.character.groundImpactData.y < -2) {
+        this.character.setState(
+          Utils.characterStateFactory(StateType.DropRunning, this.character)
+        );
+      } else {
+        if (this.character.actions.run.isPressed) {
+          this.character.setState(
+            Utils.characterStateFactory(StateType.Sprint, this.character)
+          );
+        } else {
+          this.character.setState(
+            Utils.characterStateFactory(StateType.Walk, this.character)
+          );
+        }
+      }
+    } else {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.DropIdle, this.character)
       );
     }
   }

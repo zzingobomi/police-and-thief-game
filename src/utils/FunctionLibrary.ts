@@ -15,6 +15,14 @@ import { IdleRotateLeft } from "../characters/character_states/IdleRotateLeft";
 import { IdleRotateRight } from "../characters/character_states/IdleRotateRight";
 import { StateType } from "../enums/StateType";
 import { Vec3, Vec4 } from "../rooms/schema/Vector";
+import { EndWalk } from "../characters/character_states/EndWalk";
+import { Falling } from "../characters/character_states/Falling";
+import { DropIdle } from "../characters/character_states/DropIdle";
+import { DropRolling } from "../characters/character_states/DropRolling";
+import { DropRunning } from "../characters/character_states/DropRunning";
+import { JumpIdle } from "../characters/character_states/JumpIdle";
+import { JumpRunning } from "../characters/character_states/JumpRunning";
+import { Sprint } from "../characters/character_states/Sprint";
 
 interface Face3 {
   a: number;
@@ -28,21 +36,21 @@ export function setDefaults(options: {}, defaults: {}): {} {
   return _.defaults({}, _.clone(options), defaults);
 }
 
-// export function threeVector(vec: CANNON.Vec3): THREE.Vector3 {
-//   return new THREE.Vector3(vec.x, vec.y, vec.z);
-// }
+export function cannon2threeVector(vec: CANNON.Vec3): THREE.Vector3 {
+  return new THREE.Vector3(vec.x, vec.y, vec.z);
+}
 
-// export function cannonVector(vec: THREE.Vector3): CANNON.Vec3 {
-//   return new CANNON.Vec3(vec.x, vec.y, vec.z);
-// }
+export function three2cannonVector(vec: THREE.Vector3): CANNON.Vec3 {
+  return new CANNON.Vec3(vec.x, vec.y, vec.z);
+}
 
-// export function threeQuat(quat: CANNON.Quaternion): THREE.Quaternion {
-//   return new THREE.Quaternion(quat.x, quat.y, quat.z, quat.w);
-// }
+export function cannon2threeQuat(quat: CANNON.Quaternion): THREE.Quaternion {
+  return new THREE.Quaternion(quat.x, quat.y, quat.z, quat.w);
+}
 
-// export function cannonQuat(quat: THREE.Quaternion): CANNON.Quaternion {
-//   return new CANNON.Quaternion(quat.x, quat.y, quat.z, quat.w);
-// }
+export function three2cannonQuat(quat: THREE.Quaternion): CANNON.Quaternion {
+  return new CANNON.Quaternion(quat.x, quat.y, quat.z, quat.w);
+}
 
 export function three2Vec3(vec: THREE.Vector3): Vec3 {
   return new Vec3(vec.x, vec.y, vec.z);
@@ -138,6 +146,14 @@ export function springV(
   velocity.add(acceleration);
   velocity.multiplyScalar(damping);
   source.add(velocity);
+}
+
+export function haveSameSigns(n1: number, n2: number): boolean {
+  return n1 < 0 === n2 < 0;
+}
+
+export function haveDifferentSigns(n1: number, n2: number): boolean {
+  return n1 < 0 !== n2 < 0;
 }
 
 export function getSignedAngleBetweenVectors(
@@ -310,6 +326,22 @@ export function characterStateFactory(type: StateType, character: Character) {
       return new StartWalkForward(character);
     case StateType.Walk:
       return new Walk(character);
+    case StateType.EndWalk:
+      return new EndWalk(character);
+    case StateType.Falling:
+      return new Falling(character);
+    case StateType.DropIdle:
+      return new DropIdle(character);
+    case StateType.DropRolling:
+      return new DropRolling(character);
+    case StateType.DropRunning:
+      return new DropRunning(character);
+    case StateType.JumpIdle:
+      return new JumpIdle(character);
+    case StateType.JumpRunning:
+      return new JumpRunning(character);
+    case StateType.Sprint:
+      return new Sprint(character);
     default:
       return new Idle(character);
   }

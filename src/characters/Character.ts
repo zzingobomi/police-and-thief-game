@@ -31,6 +31,7 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   public velocity: THREE.Vector3 = new THREE.Vector3();
   public arcadeVelocityInfluence: THREE.Vector3 = new THREE.Vector3();
   public velocityTarget: THREE.Vector3 = new THREE.Vector3();
+  public arcadeVelocityIsAdditive: boolean = false;
 
   public defaultVelocitySimulatorDamping = 0.8;
   public defaultVelocitySimulatorMass = 50;
@@ -51,7 +52,9 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   public rayHasHit = false;
   public rayCastLength = 0.57;
   public raySafeOffset = 0.03;
-  //public raycastBox: THREE.Mesh;
+  public wantsToJump: boolean = false;
+  public initJumpSpeed: number = -1;
+  public groundImpactData: THREE.Vector3 = new THREE.Vector3();
 
   public world: World;
   public charState: ICharacterState;
@@ -249,6 +252,11 @@ export class Character extends THREE.Object3D implements IWorldEntity {
     );
   }
 
+  public jump(initJumpSpeed: number = -1): void {
+    this.wantsToJump = true;
+    this.initJumpSpeed = initJumpSpeed;
+  }
+
   public setOrientation(vector: THREE.Vector3, instantly = false): void {
     const lookVector = new THREE.Vector3().copy(vector).setY(0).normalize();
     this.orientationTarget.copy(lookVector);
@@ -260,24 +268,6 @@ export class Character extends THREE.Object3D implements IWorldEntity {
 
   public physicsPreStep() {
     this.feetRaycast();
-
-    // if (this.rayHasHit) {
-    //   if (this.raycastBox.visible) {
-    //     this.raycastBox.position.x = this.rayResult.hitPointWorld.x;
-    //     this.raycastBox.position.y = this.rayResult.hitPointWorld.y;
-    //     this.raycastBox.position.z = this.rayResult.hitPointWorld.z;
-    //   }
-    // } else {
-    //   if (this.raycastBox.visible) {
-    //     this.raycastBox.position.set(
-    //       this.characterCapsule.body.position.x,
-    //       this.characterCapsule.body.position.y -
-    //         this.rayCastLength -
-    //         this.raySafeOffset,
-    //       this.characterCapsule.body.position.z
-    //     );
-    //   }
-    // }
   }
 
   public feetRaycast() {
@@ -320,23 +310,58 @@ export class Character extends THREE.Object3D implements IWorldEntity {
     );
 
     let newVelocity = new THREE.Vector3();
-    newVelocity = new THREE.Vector3(
-      THREE.MathUtils.lerp(
-        simulatedVelocity.x,
-        arcadeVelocity.x,
-        this.arcadeVelocityInfluence.x
-      ),
-      THREE.MathUtils.lerp(
-        simulatedVelocity.y,
-        arcadeVelocity.y,
-        this.arcadeVelocityInfluence.y
-      ),
-      THREE.MathUtils.lerp(
-        simulatedVelocity.z,
-        arcadeVelocity.z,
-        this.arcadeVelocityInfluence.z
-      )
-    );
+
+    if (this.arcadeVelocityIsAdditive) {
+      newVelocity.copy(simulatedVelocity);
+
+      let globalVelocityTarget = Utils.appplyVectorMatrixXZ(
+        this.orientation,
+        this.velocityTarget
+      );
+      let add = new THREE.Vector3()
+        .copy(arcadeVelocity)
+        .multiply(this.arcadeVelocityInfluence);
+
+      if (
+        Math.abs(simulatedVelocity.x) <
+          Math.abs(globalVelocityTarget.x * this.moveSpeed) ||
+        Utils.haveDifferentSigns(simulatedVelocity.x, arcadeVelocity.x)
+      ) {
+        newVelocity.x += add.x;
+      }
+      if (
+        Math.abs(simulatedVelocity.y) <
+          Math.abs(globalVelocityTarget.y * this.moveSpeed) ||
+        Utils.haveDifferentSigns(simulatedVelocity.y, arcadeVelocity.y)
+      ) {
+        newVelocity.y += add.y;
+      }
+      if (
+        Math.abs(simulatedVelocity.z) <
+          Math.abs(globalVelocityTarget.z * this.moveSpeed) ||
+        Utils.haveDifferentSigns(simulatedVelocity.z, arcadeVelocity.z)
+      ) {
+        newVelocity.z += add.z;
+      }
+    } else {
+      newVelocity = new THREE.Vector3(
+        THREE.MathUtils.lerp(
+          simulatedVelocity.x,
+          arcadeVelocity.x,
+          this.arcadeVelocityInfluence.x
+        ),
+        THREE.MathUtils.lerp(
+          simulatedVelocity.y,
+          arcadeVelocity.y,
+          this.arcadeVelocityInfluence.y
+        ),
+        THREE.MathUtils.lerp(
+          simulatedVelocity.z,
+          arcadeVelocity.z,
+          this.arcadeVelocityInfluence.z
+        )
+      );
+    }
 
     if (this.rayHasHit) {
       newVelocity.y = 0;
@@ -370,6 +395,44 @@ export class Character extends THREE.Object3D implements IWorldEntity {
       this.characterCapsule.body.velocity.x = newVelocity.x;
       this.characterCapsule.body.velocity.y = newVelocity.y;
       this.characterCapsule.body.velocity.z = newVelocity.z;
+
+      this.groundImpactData.x = this.characterCapsule.body.velocity.x;
+      this.groundImpactData.y = this.characterCapsule.body.velocity.y;
+      this.groundImpactData.z = this.characterCapsule.body.velocity.z;
+    }
+
+    // Jumping
+    if (this.wantsToJump) {
+      // If initJumpSpeed is set
+      if (this.initJumpSpeed > -1) {
+        // Flatten velocity
+        this.characterCapsule.body.velocity.y = 0;
+        let speed = Math.max(
+          this.velocitySimulator.position.length() * 4,
+          this.initJumpSpeed
+        );
+        this.characterCapsule.body.velocity = Utils.three2cannonVector(
+          this.orientation.clone().multiplyScalar(speed)
+        );
+      } else {
+        // Moving objects compensation
+        let add = new CANNON.Vec3();
+        this.rayResult.body.getVelocityAtWorldPoint(
+          this.rayResult.hitPointWorld,
+          add
+        );
+        this.characterCapsule.body.velocity.vsub(
+          add,
+          this.characterCapsule.body.velocity
+        );
+      }
+
+      // Add positive vertical velocity
+      this.characterCapsule.body.velocity.y += 4;
+      // Move above ground by 2x safe offset value
+      this.characterCapsule.body.position.y += this.raySafeOffset * 2;
+      // Reset flag
+      this.wantsToJump = false;
     }
   }
 

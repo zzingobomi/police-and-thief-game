@@ -1,22 +1,26 @@
 import { StateType } from "../../enums/StateType";
-import * as Utils from "../../utils/FunctionLibrary";
 import { Character } from "../Character";
 import { CharacterStateBase } from "./CharacterStateBase";
+import * as Utils from "../../utils/FunctionLibrary";
 
-export class Walk extends CharacterStateBase {
+export class DropRunning extends CharacterStateBase {
   constructor(character: Character) {
-    super(character, StateType.Walk);
+    super(character, StateType.DropRunning);
 
     this.character.setArcadeVelocityTarget(0.8);
-    this.playAnimation("run");
+    this.playAnimation("drop_running");
   }
 
-  public update(delta: number): void {
-    super.update(delta);
+  public update(timeStep: number): void {
+    super.update(timeStep);
 
     this.character.setCameraRelativeOrientationTarget();
 
-    this.fallInAir();
+    if (this.animationEnded(timeStep)) {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.Walk, this.character)
+      );
+    }
   }
 
   public onInputChange(): void {
@@ -28,13 +32,7 @@ export class Walk extends CharacterStateBase {
       );
     }
 
-    if (this.character.actions.run.isPressed) {
-      this.character.setState(
-        Utils.characterStateFactory(StateType.Sprint, this.character)
-      );
-    }
-
-    if (this.character.actions.run.justPressed) {
+    if (this.anyDirection() && this.character.actions.run.justPressed) {
       this.character.setState(
         Utils.characterStateFactory(StateType.Sprint, this.character)
       );
@@ -44,18 +42,6 @@ export class Walk extends CharacterStateBase {
       this.character.setState(
         Utils.characterStateFactory(StateType.JumpRunning, this.character)
       );
-    }
-
-    if (this.noDirection()) {
-      if (this.character.velocity.length() > 1) {
-        this.character.setState(
-          Utils.characterStateFactory(StateType.EndWalk, this.character)
-        );
-      } else {
-        this.character.setState(
-          Utils.characterStateFactory(StateType.Idle, this.character)
-        );
-      }
     }
   }
 }

@@ -30,6 +30,12 @@ export class IdleRotateRight extends CharacterStateBase {
   public onInputChange(): void {
     super.onInputChange();
 
+    if (this.character.actions.jump.justPressed) {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.JumpIdle, this.character)
+      );
+    }
+
     if (this.anyDirection()) {
       if (this.character.velocity.length() > 0.5) {
         this.character.setState(

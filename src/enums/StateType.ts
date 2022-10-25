@@ -8,4 +8,12 @@ export enum StateType {
   StartWalkRight = "StartWalkRight",
   StartWalkForward = "StartWalkForward",
   Walk = "Walk",
+  EndWalk = "EndWalk",
+  DropIdle = "DropIdle",
+  DropRolling = "DropRolling",
+  DropRunning = "DropRunning",
+  Falling = "Falling",
+  JumpIdle = "JumpIdle",
+  JumpRunning = "JumpRunning",
+  Sprint = "Sprint",
 }

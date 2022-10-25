@@ -23,6 +23,8 @@ export class StartWalkBase extends CharacterStateBase {
     }
 
     this.character.setCameraRelativeOrientationTarget();
+
+    this.fallInAir();
   }
 
   public onInputChange() {
@@ -59,6 +61,12 @@ export class StartWalkBase extends CharacterStateBase {
           Utils.characterStateFactory(StateType.Idle, this.character)
         );
       }
+    }
+
+    if (this.character.actions.jump.justPressed) {
+      this.character.setState(
+        Utils.characterStateFactory(StateType.JumpRunning, this.character)
+      );
     }
   }
 }
