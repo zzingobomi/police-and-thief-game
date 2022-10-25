@@ -10,11 +10,13 @@ import { TrimeshCollider } from "../physics/colliders/TrimeshCollider";
 import { Character } from "../characters/Character";
 import { IWorldEntity } from "../interfaces/IWorldEntity";
 import { IUpdatable } from "../interfaces/IUpdatable";
+import { Vehicle } from "../vehicles/Vehicle";
 
 export class World {
   public physicsWorld: CANNON.World;
 
   public characters: Character[] = [];
+  public vehicles: Vehicle[] = [];
 
   public updatables: IUpdatable[] = [];
   private previousTime = Date.now();
@@ -23,6 +25,7 @@ export class World {
     this.initPhysics();
     this.initWorldInfo();
     this.initCharacterInfo();
+    this.initVehicleInfo();
 
     this.update();
   }
@@ -91,6 +94,19 @@ export class World {
     );
     const characterData = JSON.parse(rawData);
     Utils.setCharacterData(characterData);
+  }
+
+  private initVehicleInfo() {
+    const rawData = fs.readFileSync(
+      path.join(__dirname, "..", "assets\\json\\vehicle.json"),
+      "utf-8"
+    );
+    const vehicleData = JSON.parse(rawData);
+    for (const data of vehicleData) {
+      if (data.type === "car") {
+        // TODO:
+      }
+    }
   }
 
   public createCharacter(sessionId: string) {
