@@ -11,23 +11,52 @@ import { Character } from "../characters/Character";
 import { IWorldEntity } from "../interfaces/IWorldEntity";
 import { IUpdatable } from "../interfaces/IUpdatable";
 import { Vehicle } from "../vehicles/Vehicle";
+import { Car } from "../vehicles/Car";
+import { Scene } from "three";
 
 export class World {
+  public scene: Scene;
   public physicsWorld: CANNON.World;
 
   public characters: Character[] = [];
   public vehicles: Vehicle[] = [];
 
   public updatables: IUpdatable[] = [];
+
   private previousTime = Date.now();
 
   constructor() {
+    this.initScene();
     this.initPhysics();
-    this.initWorldInfo();
+    this.initWorld();
     this.initCharacterInfo();
-    this.initVehicleInfo();
+    //this.initVehicleInfo();
+
+    // test
+    const carPos1 = new THREE.Object3D();
+    carPos1.position.set(
+      -67.66140747070312,
+      -24.892574310302734,
+      31.4639892578125
+    );
+    carPos1.quaternion.set(0, 0.20692487061023712, 0, 0.9783568382263184);
+    this.createCar(carPos1);
+
+    const carPos2 = new THREE.Object3D();
+    carPos2.position.set(
+      -58.36204528808594,
+      -24.892574310302734,
+      42.5499267578125
+    );
+    carPos2.quaternion.set(0, -0.9404844641685486, 0, 0.3398367166519165);
+    this.createCar(carPos2);
 
     this.update();
+  }
+
+  private initScene() {
+    const scene = new THREE.Scene();
+    this.scene = scene;
   }
 
   private initPhysics() {
@@ -50,7 +79,92 @@ export class World {
     setTimeout(this.update.bind(this), 16);
   }
 
-  private initWorldInfo() {
+  private async initWorld() {
+    const gltf = await Utils.loadGLTFModel(
+      path.join(__dirname, "..", "assets\\glb\\world.glb")
+    );
+    gltf.scene.traverse((child) => {
+      if (child.hasOwnProperty("userData")) {
+        if (child.type === "Mesh") {
+          // TODO: CSM
+        }
+
+        if (child.userData.hasOwnProperty("data")) {
+          if (child.userData.data === "physics") {
+            if (child.userData.hasOwnProperty("type")) {
+              if (child.userData.type === "box") {
+                const phys = new BoxCollider({
+                  size: new THREE.Vector3(
+                    child.scale.x,
+                    child.scale.y,
+                    child.scale.z
+                  ),
+                });
+                phys.body.position.copy(
+                  Utils.three2cannonVector(child.position)
+                );
+                phys.body.quaternion.copy(
+                  Utils.three2cannonQuat(child.quaternion)
+                );
+                phys.body.updateAABB();
+
+                phys.body.shapes.forEach((shape) => {
+                  shape.collisionFilterMask = ~CollisionGroups.TrimeshColliders;
+                });
+
+                this.physicsWorld.addBody(phys.body);
+              } else if (
+                child.userData.type === "trimesh" &&
+                child instanceof THREE.Mesh
+              ) {
+                const phys = new TrimeshCollider(child, {});
+                this.physicsWorld.addBody(phys.body);
+              }
+
+              child.visible = false;
+            }
+          }
+          if (child.userData.data === "scenario") {
+            if (
+              child.userData.hasOwnProperty("default") &&
+              child.userData.default === "true"
+            ) {
+              child.traverse((scenarioData) => {
+                if (
+                  scenarioData.hasOwnProperty("userData") &&
+                  scenarioData.userData.hasOwnProperty("data")
+                ) {
+                  if (scenarioData.userData.data === "spawn") {
+                    if (scenarioData.userData.type === "player") {
+                      //this.createMyCharacter(scenarioData);
+                    }
+                  }
+                }
+              });
+            } else if (
+              child.userData.hasOwnProperty("spawn_always") &&
+              child.userData.spawn_always === "true"
+            ) {
+              child.traverse((scenarioData) => {
+                if (
+                  scenarioData.hasOwnProperty("userData") &&
+                  scenarioData.userData.hasOwnProperty("data")
+                ) {
+                  if (scenarioData.userData.data === "spawn") {
+                    if (scenarioData.userData.type === "car") {
+                      //this.createCar(scenarioData);
+                    }
+                  }
+                }
+              });
+            }
+          }
+        }
+      }
+    });
+    this.scene.add(gltf.scene);
+
+    /*
     const rawData = fs.readFileSync(
       path.join(__dirname, "..", "assets\\json\\world.json"),
       "utf-8"
@@ -85,6 +199,7 @@ export class World {
         this.physicsWorld.addBody(phys.body);
       }
     }
+    */
   }
 
   private initCharacterInfo() {
@@ -107,6 +222,59 @@ export class World {
         // TODO:
       }
     }
+  }
+
+  private async createCar(initialData: THREE.Object3D) {
+    const model = await Utils.loadGLTFModel(
+      path.join(__dirname, "..", "assets\\glb\\car.glb")
+    );
+    const car = new Car(model);
+
+    const worldPos = new THREE.Vector3();
+    const worldQuat = new THREE.Quaternion();
+    initialData.getWorldPosition(worldPos);
+    initialData.getWorldQuaternion(worldQuat);
+
+    car.setPosition(worldPos.x, worldPos.y + 2, worldPos.z);
+    car.collision.quaternion.copy(Utils.three2cannonQuat(worldQuat));
+    car.scale.set(
+      initialData.scale.x,
+      initialData.scale.y,
+      initialData.scale.z
+    );
+
+    this.add(car);
+
+    /*
+    model.scene.traverse((child) => {
+      if (child.hasOwnProperty("userData")) {
+        if (child.userData.hasOwnProperty("data")) {
+          if (child.userData.data === "seat") {
+            //this.seats.push(new VehicleSeat(this, child, gltf));
+          }
+          if (child.userData.data === "camera") {
+            //this.camera = child;
+          }
+          if (child.userData.data === "wheel") {
+            //this.wheels.push(new Wheel(child));
+          }
+          if (child.userData.data === "collision") {
+            if (child.userData.shape === "box") {
+              const phys = new CANNON.Box(
+                new CANNON.Vec3(child.scale.x, child.scale.y, child.scale.z)
+              );
+              phys.collisionFilterMask = ~CollisionGroups.TrimeshColliders;
+              //this.collision.addShape(phys, new CANNON.Vec3(child.position.x, child.position.y, child.position.z));
+            } else if (child.userData.shape === "sphere") {
+              const phys = new CANNON.Sphere(child.scale.x);
+              phys.collisionFilterGroup = CollisionGroups.TrimeshColliders;
+              //this.collision.addShape(phys, new CANNON.Vec3(child.position.x, child.position.y, child.position.z));
+            }
+          }
+        }
+      }
+    });
+    */
   }
 
   public createCharacter(sessionId: string) {

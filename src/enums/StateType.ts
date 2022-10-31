@@ -1,4 +1,5 @@
 export enum StateType {
+  // Arcade
   Idle = "Idle",
   IdleRotateLeft = "IdleRotateLeft",
   IdleRotateRight = "IdleRotateRight",
@@ -16,4 +17,13 @@ export enum StateType {
   JumpIdle = "JumpIdle",
   JumpRunning = "JumpRunning",
   Sprint = "Sprint",
+  // Vehicle
+  CloseVehicleDoorInside = "CloseVehicleDoorInside",
+  CloseVehicleDoorOutside = "CloseVehicleDoorOutside",
+  Driving = "Driving",
+  EnteringVehicle = "EnteringVehicle",
+  ExitingVehicle = "ExitingVehicle",
+  OpenVehicleDoor = "OpenVehicleDoor",
+  Sitting = "Sitting",
+  SwitchingSeats = "SwitchingSeats",
 }

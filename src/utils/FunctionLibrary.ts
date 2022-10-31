@@ -1,6 +1,11 @@
 import * as _ from "lodash";
 import * as CANNON from "cannon-es";
 import * as THREE from "three";
+import fs from "fs";
+import path from "path";
+import "jsdom-global/register";
+import { CustomGLTFLoader } from "./GLTFLoader";
+import { GLTF } from "three-stdlib";
 import { Space } from "../enums/Space";
 import { SimulationFrame } from "../physics/colliders/spring_simulation/SimulationFrame";
 import { StartWalkBackLeft } from "../characters/character_states/StartWalkBackLeft";
@@ -23,6 +28,8 @@ import { DropRunning } from "../characters/character_states/DropRunning";
 import { JumpIdle } from "../characters/character_states/JumpIdle";
 import { JumpRunning } from "../characters/character_states/JumpRunning";
 import { Sprint } from "../characters/character_states/Sprint";
+import { Side } from "../enums/Side";
+const DracoLoader = require("./DRACOLoader");
 
 interface Face3 {
   a: number;
@@ -205,6 +212,18 @@ export function appplyVectorMatrixXZ(
   return new THREE.Vector3(a.x * b.z + a.z * b.x, b.y, a.z * b.z + -a.x * b.x);
 }
 
+export function createTrimesh(geometry: THREE.BufferGeometry): CANNON.Trimesh {
+  let vertices;
+  if (geometry.index === null) {
+    vertices = geometry.attributes.position.array as number[];
+  } else {
+    vertices = geometry.clone().toNonIndexed().attributes.position
+      .array as number[];
+  }
+  const indices = Object.keys(vertices).map(Number);
+  return new CANNON.Trimesh(vertices, indices);
+}
+
 export function createConvexPolyhedron(
   geometry: THREE.BufferGeometry
 ): CANNON.ConvexPolyhedron {
@@ -299,12 +318,12 @@ export function offsetCenterOfMass(
   body.position.vadd(worldCenterOfMass, body.position);
 }
 
-export function toArrayBuffer(buf: any) {
-  var ab = new ArrayBuffer(buf.length);
-  var view = new Uint8Array(ab);
-  for (var i = 0; i < buf.length; ++i) view[i] = buf[i];
-  return ab;
-}
+// export function toArrayBuffer(buf: any) {
+//   var ab = new ArrayBuffer(buf.length);
+//   var view = new Uint8Array(ab);
+//   for (var i = 0; i < buf.length; ++i) view[i] = buf[i];
+//   return ab;
+// }
 
 export function characterStateFactory(type: StateType, character: Character) {
   switch (type) {
@@ -403,4 +422,57 @@ export function checkDiffQuat(
     return true;
   }
   return false;
+}
+
+export function detectRelativeSide(
+  from: THREE.Object3D,
+  to: THREE.Object3D
+): Side {
+  const right = getRight(from, Space.Local);
+  const viewVector = to.position.clone().sub(from.position).normalize();
+
+  return right.dot(viewVector) > 0 ? Side.Left : Side.Right;
+}
+
+export function easeInOutSine(x: number): number {
+  return -(Math.cos(Math.PI * x) - 1) / 2;
+}
+
+export function easeOutQuad(x: number): number {
+  return 1 - (1 - x) * (1 - x);
+}
+
+export function toArrayBuffer(buf: any) {
+  const arrayBuffer = new ArrayBuffer(buf.length);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buf.length; ++i) {
+    view[i] = buf[i];
+  }
+  return arrayBuffer;
+}
+
+const gltfLoader = new CustomGLTFLoader();
+// @ts-ignore
+//gltfLoader.setDRACOLoader(new DRACOLoader());
+gltfLoader.setDRACOLoader(new DracoLoader());
+
+export function loadGLTFModel(filePath: string): Promise<GLTF> {
+  return new Promise((resolve, reject) => {
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath);
+      const arrayBuffer = toArrayBuffer(data);
+      // @ts-ignore
+      gltfLoader.parse(
+        arrayBuffer,
+        "",
+        (gltf: any) => {
+          resolve(gltf);
+        },
+        (error: any) => {
+          console.log(error);
+          reject("Loader failed");
+        }
+      );
+    } else reject(`Cannot find ${filePath}`);
+  });
 }
