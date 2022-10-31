@@ -26,6 +26,16 @@ export class MetaRoom extends Room<MetaRoomState> {
       Utils.three2Vec4(playerInfo.quaternion),
       Utils.three2Vec3(playerInfo.scale)
     );
+
+    const carsInfo = this.world.getCarsInfo();
+    for (const car of carsInfo) {
+      this.state.createCar(
+        car.uuid,
+        Utils.three2Vec3(car.position),
+        Utils.three2Vec4(car.quaternion),
+        Utils.three2Vec3(car.scale)
+      );
+    }
   }
 
   onLeave(client: Client) {
@@ -51,6 +61,7 @@ export class MetaRoom extends Room<MetaRoomState> {
   }
 
   registSubscribes() {
+    // Player
     PubSub.subscribe(SignalType.UPDATE_PLAYER_POSITION, (msg, data) => {
       this.state.updatePlayerPosition(
         data.sessionId,
@@ -71,6 +82,23 @@ export class MetaRoom extends Room<MetaRoomState> {
     });
     PubSub.subscribe(SignalType.UPDATE_PLAYER_STATE, (msg, data) => {
       this.state.updatePlayerState(data.sessionId, data.name);
+    });
+
+    // Car
+    PubSub.subscribe(SignalType.UPDATE_CAR_POSITION, (msg, data) => {
+      this.state.updateCarPosition(
+        data.networkId,
+        Utils.three2Vec3(data.position)
+      );
+    });
+    PubSub.subscribe(SignalType.UPDATE_CAR_QUATERNION, (msg, data) => {
+      this.state.updateCarQuaternion(
+        data.networkId,
+        Utils.three2Vec4(data.quaternion)
+      );
+    });
+    PubSub.subscribe(SignalType.UPDATE_CAR_SCALE, (msg, data) => {
+      this.state.updateCarScale(data.networkId, Utils.three2Vec3(data.scale));
     });
   }
 }

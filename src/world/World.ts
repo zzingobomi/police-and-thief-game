@@ -13,6 +13,7 @@ import { IUpdatable } from "../interfaces/IUpdatable";
 import { Vehicle } from "../vehicles/Vehicle";
 import { Car } from "../vehicles/Car";
 import { Scene } from "three";
+import { EntityType } from "../enums/EntityType";
 
 export class World {
   public scene: Scene;
@@ -30,26 +31,6 @@ export class World {
     this.initPhysics();
     this.initWorld();
     this.initCharacterInfo();
-    //this.initVehicleInfo();
-
-    // test
-    const carPos1 = new THREE.Object3D();
-    carPos1.position.set(
-      -67.66140747070312,
-      -24.892574310302734,
-      31.4639892578125
-    );
-    carPos1.quaternion.set(0, 0.20692487061023712, 0, 0.9783568382263184);
-    this.createCar(carPos1);
-
-    const carPos2 = new THREE.Object3D();
-    carPos2.position.set(
-      -58.36204528808594,
-      -24.892574310302734,
-      42.5499267578125
-    );
-    carPos2.quaternion.set(0, -0.9404844641685486, 0, 0.3398367166519165);
-    this.createCar(carPos2);
 
     this.update();
   }
@@ -152,7 +133,7 @@ export class World {
                 ) {
                   if (scenarioData.userData.data === "spawn") {
                     if (scenarioData.userData.type === "car") {
-                      //this.createCar(scenarioData);
+                      this.createCar(scenarioData);
                     }
                   }
                 }
@@ -209,19 +190,6 @@ export class World {
     );
     const characterData = JSON.parse(rawData);
     Utils.setCharacterData(characterData);
-  }
-
-  private initVehicleInfo() {
-    const rawData = fs.readFileSync(
-      path.join(__dirname, "..", "assets\\json\\vehicle.json"),
-      "utf-8"
-    );
-    const vehicleData = JSON.parse(rawData);
-    for (const data of vehicleData) {
-      if (data.type === "car") {
-        // TODO:
-      }
-    }
   }
 
   private async createCar(initialData: THREE.Object3D) {
@@ -332,5 +300,11 @@ export class World {
       (char) => char instanceof Character && char.sessionId === sessionId
     ) as Character;
     findCharacter.viewUpdate(data);
+  }
+
+  public getCarsInfo() {
+    return this.vehicles.filter(
+      (vehicle) => vehicle.entityType === EntityType.Car
+    );
   }
 }

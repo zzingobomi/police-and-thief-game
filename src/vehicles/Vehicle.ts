@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import * as _ from "lodash";
+import * as Utils from "../utils/FunctionLibrary";
 import { IWorldEntity } from "../interfaces/IWorldEntity";
 import { EntityType } from "../enums/EntityType";
 import { World } from "../world/World";
@@ -10,6 +11,8 @@ import { KeyBinding } from "../core/KeyBinding";
 import { VehicleSeat } from "./VehicleSeat";
 import { Wheel } from "./Wheel";
 import { CollisionGroups } from "../enums/CollisionGroups";
+import { SignalType } from "../core/SignalType";
+import PubSub from "pubsub-js";
 
 export abstract class Vehicle extends THREE.Object3D implements IWorldEntity {
   public updateOrder: number = 2;
@@ -24,6 +27,10 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity {
   public collision: CANNON.Body;
 
   private modelContainer: THREE.Group;
+
+  private oldPosition = new THREE.Vector3();
+  private oldQuaternion = new THREE.Quaternion();
+  private oldScale = new THREE.Vector3();
 
   constructor(gltf: GLTF, handlingSetup?: any) {
     super();
@@ -146,7 +153,12 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity {
   addToWorld(world: World): void {
     this.world = world;
     world.vehicles.push(this);
-    //world.scene.add(this);
+    world.scene.add(this);
+    this.rayCastVehicle.addToWorld(world.physicsWorld);
+
+    this.wheels.forEach((wheel) => {
+      world.scene.attach(wheel.wheelObject);
+    });
   }
   removeFromWorld(world: World): void {
     if (!_.includes(world.vehicles, this)) {
@@ -165,7 +177,60 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity {
     this.collision.position.z = z;
   }
 
-  update(delta: number): void {}
+  update(delta: number): void {
+    this.position.set(
+      this.collision.interpolatedPosition.x,
+      this.collision.interpolatedPosition.y,
+      this.collision.interpolatedPosition.z
+    );
+
+    this.quaternion.set(
+      this.collision.interpolatedQuaternion.x,
+      this.collision.interpolatedQuaternion.y,
+      this.collision.interpolatedQuaternion.z,
+      this.collision.interpolatedQuaternion.w
+    );
+
+    this.seats.forEach((seat: VehicleSeat) => {
+      seat.update(delta);
+    });
+
+    for (let i = 0; i < this.rayCastVehicle.wheelInfos.length; i++) {
+      this.rayCastVehicle.updateWheelTransform(i);
+      const transform = this.rayCastVehicle.wheelInfos[i].worldTransform;
+
+      const wheelObject = this.wheels[i].wheelObject;
+      wheelObject.position.copy(Utils.cannon2threeVector(transform.position));
+      wheelObject.quaternion.copy(Utils.cannon2threeQuat(transform.quaternion));
+
+      //let upAxisWorld = new CANNON.Vec3();
+      //this.rayCastVehicle.getVehicleAxisWorld(this.rayCastVehicle.indexUpAxis, upAxisWorld);
+    }
+
+    this.updateMatrixWorld();
+
+    if (Utils.checkDiffVec(this.oldPosition, this.position)) {
+      this.oldPosition.copy(this.position);
+      PubSub.publish(SignalType.UPDATE_CAR_POSITION, {
+        networkId: this.uuid,
+        position: Utils.fixedVec3(this.position),
+      });
+    }
+    if (Utils.checkDiffQuat(this.oldQuaternion, this.quaternion)) {
+      this.oldQuaternion.copy(this.quaternion);
+      PubSub.publish(SignalType.UPDATE_CAR_QUATERNION, {
+        networkId: this.uuid,
+        quaternion: Utils.fixedQuat(this.quaternion),
+      });
+    }
+    if (Utils.checkDiffVec(this.oldScale, this.scale)) {
+      this.oldScale.copy(this.scale);
+      PubSub.publish(SignalType.UPDATE_CAR_SCALE, {
+        networkId: this.uuid,
+        scale: Utils.fixedVec3(this.scale),
+      });
+    }
+  }
 
   handleKeyboardEvent(
     event: KeyboardEvent,
