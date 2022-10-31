@@ -117,8 +117,6 @@ export class World {
                 child.userData.type === "trimesh" &&
                 child instanceof THREE.Mesh
               ) {
-                // TODO: 혹시 draco 때문에 못불러온건가..?
-                // 보니까 애니메이션도 제대로 못불러온거 같긴한데..?
                 const phys = new TrimeshCollider(child, {});
                 this.physicsWorld.addBody(phys.body);
               }

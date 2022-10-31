@@ -1624,6 +1624,10 @@ export const CustomGLTFLoader = (function () {
     return pending;
   };
 
+  // gltfjsx 에서는 중복되는 geometry 제거 및 key값으로 geometry 를 관리하기 위해 각 object 에 geometry 를 복사하지 않고
+  // 키 값을 저장한다음에 react attach geometry 에 키값을 전달한다.
+  // 여기서는 cannon-es 의 AABB 를 계산하기 위해 geometry 가 필요하므로 three 의 GLTFLoader 처럼
+  // bufferview 와 buffer 를 받아온다.
   /**
    * Requests the specified dependency asynchronously, with caching.
    * @param {string} type
@@ -1655,11 +1659,15 @@ export const CustomGLTFLoader = (function () {
           break;
 
         case "bufferView":
-          dependency = Promise.resolve(new Float32Array(0));
+          dependency = this._invokeOne(function (ext) {
+            return ext.loadBufferView && ext.loadBufferView(index);
+          });
+          //dependency = Promise.resolve(new Float32Array(0));
           break;
 
         case "buffer":
-          dependency = Promise.resolve(new Float32Array(0));
+          dependency = this.loadBuffer(index);
+          //dependency = Promise.resolve(new Float32Array(0));
           break;
 
         case "material":

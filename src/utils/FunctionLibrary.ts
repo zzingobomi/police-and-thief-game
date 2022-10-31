@@ -4,7 +4,7 @@ import * as THREE from "three";
 import fs from "fs";
 import path from "path";
 import "jsdom-global/register";
-import { CustomGLTFLoader } from "../bin/GLTFLoader";
+import { CustomGLTFLoader } from "./GLTFLoader";
 import { GLTF } from "three-stdlib";
 import { Space } from "../enums/Space";
 import { SimulationFrame } from "../physics/colliders/spring_simulation/SimulationFrame";
@@ -29,7 +29,7 @@ import { JumpIdle } from "../characters/character_states/JumpIdle";
 import { JumpRunning } from "../characters/character_states/JumpRunning";
 import { Sprint } from "../characters/character_states/Sprint";
 import { Side } from "../enums/Side";
-const DracoLoader = require("../bin/DRACOLoader");
+const DracoLoader = require("./DRACOLoader");
 
 interface Face3 {
   a: number;
@@ -456,23 +456,23 @@ const gltfLoader = new CustomGLTFLoader();
 //gltfLoader.setDRACOLoader(new DRACOLoader());
 gltfLoader.setDRACOLoader(new DracoLoader());
 
-export function loadGLTFModel(fileName: string): Promise<GLTF> {
+export function loadGLTFModel(filePath: string): Promise<GLTF> {
   return new Promise((resolve, reject) => {
-    if (fs.existsSync(fileName)) {
-      const data = fs.readFileSync(fileName);
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath);
       const arrayBuffer = toArrayBuffer(data);
       // @ts-ignore
       gltfLoader.parse(
         arrayBuffer,
         "",
-        (object3D: any) => {
-          resolve(object3D);
+        (gltf: any) => {
+          resolve(gltf);
         },
         (error: any) => {
           console.log(error);
           reject("Loader failed");
         }
       );
-    } else reject(`Cannot find ${fileName}`);
+    } else reject(`Cannot find ${filePath}`);
   });
 }
