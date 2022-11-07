@@ -44,6 +44,7 @@
     "cors": "^2.8.5",
     "draco3dgltf": "^1.5.4",
     "express": "^4.16.4",
+    "jsdom": "^20.0.2",
     "jsdom-global": "^3.0.2",
     "lodash": "^4.17.21",
     "pubsub-js": "^1.9.4"

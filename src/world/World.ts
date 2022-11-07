@@ -50,7 +50,8 @@ export class World {
   }
 
   private update() {
-    const deltaTime = Date.now() - this.previousTime;
+    let deltaTime = Date.now() - this.previousTime;
+    deltaTime *= 0.001; // second unit
 
     this.updatePhysics(deltaTime);
 
