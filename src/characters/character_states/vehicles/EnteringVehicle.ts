@@ -72,9 +72,21 @@ export class EnteringVehicle extends CharacterStateBase {
 
       if (this.seat.type === SeatType.Driver) {
         if (this.seat.door) this.seat.door.physicsEnabled = true;
-        //this.character.setState(new Driving(this.character, this.seat));
+        this.character.setState(
+          Utils.characterStateFactory(
+            StateType.Driving,
+            this.character,
+            this.seat
+          )
+        );
       } else if (this.seat.type === SeatType.Passenger) {
-        //this.character.setState(new Sitting(this.character, this.seat));
+        this.character.setState(
+          Utils.characterStateFactory(
+            StateType.Sitting,
+            this.character,
+            this.seat
+          )
+        );
       }
     } else {
       if (this.seat.door) {
