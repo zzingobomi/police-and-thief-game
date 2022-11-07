@@ -5,6 +5,7 @@ export enum SignalType {
   UPDATE_PLAYER_SCALE = "UpdatePlayerScale",
   UPDATE_PLAYER_STATE = "UpdatePlayerState",
   // Car
+  CREATE_CAR = "CreateCar",
   UPDATE_CAR_POSITION = "UpdateCarPosition",
   UPDATE_CAR_QUATERNION = "UpdateCarQuaternion",
   UPDATE_CAR_SCALE = "UpdateCarScale",

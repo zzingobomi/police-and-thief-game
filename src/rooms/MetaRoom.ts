@@ -26,16 +26,6 @@ export class MetaRoom extends Room<MetaRoomState> {
       Utils.three2Vec4(playerInfo.quaternion),
       Utils.three2Vec3(playerInfo.scale)
     );
-
-    const carsInfo = this.world.getCarsInfo();
-    for (const car of carsInfo) {
-      this.state.createCar(
-        car.uuid,
-        Utils.three2Vec3(car.position),
-        Utils.three2Vec4(car.quaternion),
-        Utils.three2Vec3(car.scale)
-      );
-    }
   }
 
   onLeave(client: Client) {
@@ -85,6 +75,14 @@ export class MetaRoom extends Room<MetaRoomState> {
     });
 
     // Car
+    PubSub.subscribe(SignalType.CREATE_CAR, (msg, data) => {
+      this.state.createCar(
+        data.networkId,
+        Utils.three2Vec3(data.position),
+        Utils.three2Vec4(data.quaternion),
+        Utils.three2Vec3(data.scale)
+      );
+    });
     PubSub.subscribe(SignalType.UPDATE_CAR_POSITION, (msg, data) => {
       this.state.updateCarPosition(
         data.networkId,

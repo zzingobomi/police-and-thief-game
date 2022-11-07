@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import * as Utils from "../utils/FunctionLibrary";
 import * as _ from "lodash";
+import PubSub from "pubsub-js";
 import path from "path";
 import fs from "fs";
 import { BoxCollider } from "../physics/colliders/BoxCollider";
@@ -14,6 +15,7 @@ import { Vehicle } from "../vehicles/Vehicle";
 import { Car } from "../vehicles/Car";
 import { Scene } from "three";
 import { EntityType } from "../enums/EntityType";
+import { SignalType } from "../core/SignalType";
 
 export class World {
   public scene: Scene;
@@ -203,7 +205,8 @@ export class World {
     initialData.getWorldPosition(worldPos);
     initialData.getWorldQuaternion(worldQuat);
 
-    car.setPosition(worldPos.x, worldPos.y + 2, worldPos.z);
+    worldPos.y = worldPos.y + 2;
+    car.setPosition(worldPos.x, worldPos.y, worldPos.z);
     car.collision.quaternion.copy(Utils.three2cannonQuat(worldQuat));
     car.scale.set(
       initialData.scale.x,
@@ -212,6 +215,13 @@ export class World {
     );
 
     this.add(car);
+
+    PubSub.publish(SignalType.CREATE_CAR, {
+      networkId: car.uuid,
+      position: worldPos,
+      quaternion: worldQuat,
+      scale: initialData.scale,
+    });
 
     /*
     model.scene.traverse((child) => {
