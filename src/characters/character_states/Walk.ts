@@ -7,6 +7,7 @@ export class Walk extends CharacterStateBase {
   constructor(character: Character) {
     super(character, StateType.Walk);
 
+    this.canEnterVehicles = true;
     this.character.setArcadeVelocityTarget(0.8);
     this.playAnimation("run");
   }

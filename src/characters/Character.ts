@@ -16,6 +16,15 @@ import { SignalType } from "../core/SignalType";
 import { KeyBinding } from "../core/KeyBinding";
 import { ICharacterState } from "../interfaces/ICharacterState";
 import { Idle } from "./character_states/Idle";
+import { VehicleSeat } from "../vehicles/VehicleSeat";
+import { OpenVehicleDoor } from "./character_states/vehicles/OpenVehicleDoor";
+import { EnteringVehicle } from "./character_states/vehicles/EnteringVehicle";
+import { IControllable } from "../interfaces/IControllable";
+import { VehicleEntryInstance } from "./VehicleEntryInstance";
+import { ClosestObjectFinder } from "../core/ClosestObjectFinder";
+import { Vehicle } from "../vehicles/Vehicle";
+import { SeatType } from "../enums/SeatType";
+import { Object3D } from "three";
 
 export class Character extends THREE.Object3D implements IWorldEntity {
   public sessionId: string;
@@ -59,9 +68,16 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   public world: World;
   public charState: ICharacterState;
 
+  // Vehicles
+  public controlledObject: IControllable;
+  public occupyingSeat: VehicleSeat | null = null;
+  public vehicleEntryInstance: VehicleEntryInstance | null = null;
+
   private oldPosition = new THREE.Vector3();
   private oldQuaternion = new THREE.Quaternion();
   private oldScale = new THREE.Vector3();
+
+  private physicsEnabled: boolean = true;
 
   constructor(sessionId: string) {
     super();
@@ -145,7 +161,8 @@ export class Character extends THREE.Object3D implements IWorldEntity {
 
     PubSub.publish(SignalType.UPDATE_PLAYER_STATE, {
       sessionId: this.sessionId,
-      name: this.charState.name,
+      stateName: this.charState.name,
+      animationName: this.charState.animationName,
     });
   }
 
@@ -173,24 +190,62 @@ export class Character extends THREE.Object3D implements IWorldEntity {
     }
   }
 
+  public resetControls(): void {
+    for (const action in this.actions) {
+      if (this.actions.hasOwnProperty(action)) {
+        this.triggerAction(action, false);
+      }
+    }
+  }
+
   public update(delta: number) {
+    this.vehicleEntryInstance?.update(delta);
     this.charState?.update(delta);
 
-    this.springMovement(delta);
-    this.springRotation(delta);
-    this.rotateModel();
+    if (this.physicsEnabled) this.springMovement(delta);
+    if (this.physicsEnabled) this.springRotation(delta);
+    if (this.physicsEnabled) this.rotateModel();
 
-    this.position.set(
-      this.characterCapsule.body.interpolatedPosition.x,
-      this.characterCapsule.body.interpolatedPosition.y,
-      this.characterCapsule.body.interpolatedPosition.z
-    );
+    if (this.physicsEnabled) {
+      this.position.set(
+        this.characterCapsule.body.interpolatedPosition.x,
+        this.characterCapsule.body.interpolatedPosition.y,
+        this.characterCapsule.body.interpolatedPosition.z
+      );
+    } else {
+      const newPos = new THREE.Vector3();
+      this.getWorldPosition(newPos);
 
-    if (Utils.checkDiffVec(this.oldPosition, this.position)) {
-      this.oldPosition.copy(this.position);
+      this.characterCapsule.body.position.copy(
+        Utils.three2cannonVector(newPos)
+      );
+      this.characterCapsule.body.interpolatedPosition.copy(
+        Utils.three2cannonVector(newPos)
+      );
+    }
+
+    this.updateMatrixWorld();
+
+    if (
+      Utils.checkDiffVec(
+        this.oldPosition,
+        Utils.cannon2threeVector(
+          this.characterCapsule.body.interpolatedPosition
+        )
+      )
+    ) {
+      this.oldPosition.copy(
+        Utils.cannon2threeVector(
+          this.characterCapsule.body.interpolatedPosition
+        )
+      );
       PubSub.publish(SignalType.UPDATE_PLAYER_POSITION, {
         sessionId: this.sessionId,
-        position: Utils.fixedVec3(this.position),
+        position: Utils.fixedVec3(
+          Utils.cannon2threeVector(
+            this.characterCapsule.body.interpolatedPosition
+          )
+        ),
       });
     }
     if (Utils.checkDiffQuat(this.oldQuaternion, this.quaternion)) {
@@ -210,9 +265,30 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   }
 
   public setPosition(x: number, y: number, z: number) {
-    this.characterCapsule.body.previousPosition = new CANNON.Vec3(x, y, z);
-    this.characterCapsule.body.position = new CANNON.Vec3(x, y, z);
-    this.characterCapsule.body.interpolatedPosition = new CANNON.Vec3(x, y, z);
+    if (this.physicsEnabled) {
+      this.characterCapsule.body.previousPosition = new CANNON.Vec3(x, y, z);
+      this.characterCapsule.body.position = new CANNON.Vec3(x, y, z);
+      this.characterCapsule.body.interpolatedPosition = new CANNON.Vec3(
+        x,
+        y,
+        z
+      );
+    } else {
+      this.position.x = x;
+      this.position.y = y;
+      this.position.z = z;
+    }
+  }
+  public setQuaternion(x: number, y: number, z: number, w: number) {
+    this.quaternion.x = x;
+    this.quaternion.y = y;
+    this.quaternion.z = z;
+    this.quaternion.w = w;
+  }
+  public setScale(x: number, y: number, z: number) {
+    this.scale.x = x;
+    this.scale.y = y;
+    this.scale.z = z;
   }
 
   public springMovement(delta: number) {
@@ -263,6 +339,16 @@ export class Character extends THREE.Object3D implements IWorldEntity {
 
     if (instantly) {
       this.orientation.copy(lookVector);
+    }
+  }
+
+  public setPhysicsEnabled(value: boolean) {
+    this.physicsEnabled = value;
+
+    if (value === true) {
+      this.world.physicsWorld.addBody(this.characterCapsule.body);
+    } else {
+      this.world.physicsWorld.removeBody(this.characterCapsule.body);
     }
   }
 
@@ -454,6 +540,18 @@ export class Character extends THREE.Object3D implements IWorldEntity {
     this.velocityTarget.y = velY;
   }
 
+  public resetVelocity(): void {
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+    this.velocity.z = 0;
+
+    this.characterCapsule.body.velocity.x = 0;
+    this.characterCapsule.body.velocity.y = 0;
+    this.characterCapsule.body.velocity.z = 0;
+
+    this.velocitySimulator.init();
+  }
+
   public handleKeyboardEvent(data: any) {
     for (const action in this.actions) {
       if (this.actions.hasOwnProperty(action)) {
@@ -519,16 +617,104 @@ export class Character extends THREE.Object3D implements IWorldEntity {
   }
 
   public setCameraRelativeOrientationTarget() {
-    const moveVector = this.getCameraRelativeMovementVector();
+    if (this.vehicleEntryInstance === null) {
+      const moveVector = this.getCameraRelativeMovementVector();
 
-    if (moveVector.x === 0 && moveVector.y === 0 && moveVector.z === 0) {
-      this.setOrientation(this.orientation);
-    } else {
-      this.setOrientation(moveVector);
+      if (moveVector.x === 0 && moveVector.y === 0 && moveVector.z === 0) {
+        this.setOrientation(this.orientation);
+      } else {
+        this.setOrientation(moveVector);
+      }
     }
   }
 
   public viewUpdate(data: any) {
     this.viewVector = data;
+  }
+
+  public findVehicleToEnter(wantsToDrive: boolean) {
+    let worldPos = new THREE.Vector3();
+
+    // Find best vehicle
+    const vehicleFinder = new ClosestObjectFinder<Vehicle>(this.position, 10);
+    this.world.vehicles.forEach((vehicle) => {
+      vehicleFinder.consider(vehicle, vehicle.position);
+    });
+
+    if (vehicleFinder.closestObject !== undefined) {
+      const vehicle = vehicleFinder.closestObject;
+      const vehicleEntryInstance = new VehicleEntryInstance(this);
+      vehicleEntryInstance.wantsToDrive = wantsToDrive;
+
+      // Find best seat
+      const seatFinder = new ClosestObjectFinder<VehicleSeat>(this.position);
+      for (const seat of vehicle.seats) {
+        if (wantsToDrive) {
+          // Consider driver seats
+          if (seat.type === SeatType.Driver) {
+            seat.seatPointObject.getWorldPosition(worldPos);
+            seatFinder.consider(seat, worldPos);
+          }
+          // Consider passenger seats connected to driver seats
+          else if (seat.type === SeatType.Passenger) {
+            for (const connSeat of seat.connectedSeats) {
+              if (connSeat.type === SeatType.Driver) {
+                seat.seatPointObject.getWorldPosition(worldPos);
+                seatFinder.consider(seat, worldPos);
+                break;
+              }
+            }
+          }
+        } else {
+          // Consider passenger seats
+          if (seat.type === SeatType.Passenger) {
+            seat.seatPointObject.getWorldPosition(worldPos);
+            seatFinder.consider(seat, worldPos);
+          }
+        }
+      }
+
+      if (seatFinder.closestObject !== undefined) {
+        const targetSeat = seatFinder.closestObject;
+        vehicleEntryInstance.targetSeat = targetSeat;
+
+        const entryPointFinder = new ClosestObjectFinder<Object3D>(
+          this.position
+        );
+
+        for (const point of targetSeat.entryPoints) {
+          point.getWorldPosition(worldPos);
+          entryPointFinder.consider(point, worldPos);
+        }
+
+        if (entryPointFinder.closestObject !== undefined) {
+          vehicleEntryInstance.entryPoint = entryPointFinder.closestObject;
+          this.triggerAction("up", true);
+          this.vehicleEntryInstance = vehicleEntryInstance;
+        }
+      }
+    }
+  }
+
+  public enterVehicle(seat: VehicleSeat, entryPoint: THREE.Object3D) {
+    this.resetControls();
+
+    if (seat.door?.rotation < 0.5) {
+      this.setState(new OpenVehicleDoor(this, seat, entryPoint));
+    } else {
+      this.setState(new EnteringVehicle(this, seat, entryPoint));
+    }
+  }
+
+  public occupySeat(seat: VehicleSeat): void {
+    this.occupyingSeat = seat;
+    seat.occupiedBy = this;
+  }
+
+  public leaveSeat(): void {
+    if (this.occupyingSeat !== null) {
+      this.occupyingSeat.occupiedBy = null;
+      this.occupyingSeat = null;
+    }
   }
 }

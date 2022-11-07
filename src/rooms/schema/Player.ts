@@ -1,6 +1,28 @@
 import { Schema, type } from "@colyseus/schema";
 import { Vec3, Vec4 } from "./Vector";
 
+export class PlayerState extends Schema {
+  @type("string")
+  stateName: string = "";
+
+  @type("string")
+  animationName: string = "";
+
+  get StateName() {
+    return this.stateName;
+  }
+  set StateName(name: string) {
+    this.stateName = name;
+  }
+
+  get AnimationName() {
+    return this.animationName;
+  }
+  set AnimationName(name: string) {
+    this.animationName = name;
+  }
+}
+
 export class Player extends Schema {
   @type(Vec3)
   position: Vec3 = new Vec3(0, 0, 0);
@@ -11,8 +33,8 @@ export class Player extends Schema {
   @type(Vec3)
   scale: Vec3 = new Vec3(1, 1, 1);
 
-  @type("string")
-  stateName: string = "Idle";
+  @type(PlayerState)
+  state: PlayerState = new PlayerState();
 
   constructor(position: Vec3, quaternion: Vec4, scale: Vec3) {
     super();
@@ -31,7 +53,8 @@ export class Player extends Schema {
     this.scale.Set(scale.x, scale.y, scale.z);
   }
 
-  SetStateName(name: string) {
-    this.stateName = name;
+  SetState(stateName: string, animationName: string) {
+    this.state.StateName = stateName;
+    this.state.AnimationName = animationName;
   }
 }

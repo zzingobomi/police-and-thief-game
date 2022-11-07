@@ -29,6 +29,9 @@ import { JumpIdle } from "../characters/character_states/JumpIdle";
 import { JumpRunning } from "../characters/character_states/JumpRunning";
 import { Sprint } from "../characters/character_states/Sprint";
 import { Side } from "../enums/Side";
+import { OpenVehicleDoor } from "../characters/character_states/vehicles/OpenVehicleDoor";
+import { EnteringVehicle } from "../characters/character_states/vehicles/EnteringVehicle";
+import { VehicleSeat } from "../vehicles/VehicleSeat";
 const DracoLoader = require("./DRACOLoader");
 
 interface Face3 {
@@ -325,8 +328,12 @@ export function offsetCenterOfMass(
 //   return ab;
 // }
 
-export function characterStateFactory(type: StateType, character: Character) {
-  switch (type) {
+export function characterStateFactory(
+  typeName: StateType,
+  character: Character,
+  ...option: unknown[]
+) {
+  switch (typeName) {
     case StateType.Idle:
       return new Idle(character);
     case StateType.IdleRotateLeft:
@@ -361,6 +368,18 @@ export function characterStateFactory(type: StateType, character: Character) {
       return new JumpRunning(character);
     case StateType.Sprint:
       return new Sprint(character);
+    case StateType.OpenVehicleDoor:
+      return new OpenVehicleDoor(
+        character,
+        option[0] as VehicleSeat,
+        option[1] as THREE.Object3D
+      );
+    case StateType.EnteringVehicle:
+      return new EnteringVehicle(
+        character,
+        option[0] as VehicleSeat,
+        option[1] as THREE.Object3D
+      );
     default:
       return new Idle(character);
   }

@@ -46,9 +46,13 @@ export class MetaRoomState extends Schema {
     if (player) player.scale.Set(scale.x, scale.y, scale.z);
   }
 
-  updatePlayerState(sessionId: string, name: string) {
+  updatePlayerState(
+    sessionId: string,
+    stateName: string,
+    animationName: string
+  ) {
     const player = this.players.get(sessionId);
-    if (player) player.SetStateName(name);
+    if (player) player.SetState(stateName, animationName);
   }
 
   ///

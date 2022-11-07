@@ -7,6 +7,8 @@ export class StartWalkBase extends CharacterStateBase {
   constructor(character: Character, name: string) {
     super(character, name);
 
+    this.canEnterVehicles = true;
+
     this.character.rotationSimulator.mass = 20;
     this.character.rotationSimulator.damping = 0.7;
 

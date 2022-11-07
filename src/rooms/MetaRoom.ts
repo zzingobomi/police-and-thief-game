@@ -71,7 +71,11 @@ export class MetaRoom extends Room<MetaRoomState> {
       );
     });
     PubSub.subscribe(SignalType.UPDATE_PLAYER_STATE, (msg, data) => {
-      this.state.updatePlayerState(data.sessionId, data.name);
+      this.state.updatePlayerState(
+        data.sessionId,
+        data.stateName,
+        data.animationName
+      );
     });
 
     // Car

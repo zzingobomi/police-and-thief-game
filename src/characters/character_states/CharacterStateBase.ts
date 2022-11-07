@@ -5,12 +5,18 @@ import { StateType } from "../../enums/StateType";
 
 export abstract class CharacterStateBase implements ICharacterState {
   public name: string;
+  public animationName: string;
   public character: Character;
   public timer: number;
   public animationLength: number;
 
+  public canFindVehiclesToEnter: boolean;
+  public canEnterVehicles: boolean;
+  public canLeaveVehicles: boolean;
+
   constructor(character: Character, name: string) {
     this.name = name;
+    this.animationName = "";
     this.character = character;
 
     this.character.velocitySimulator.damping =
@@ -26,6 +32,10 @@ export abstract class CharacterStateBase implements ICharacterState {
     this.character.arcadeVelocityIsAdditive = false;
     this.character.setArcadeVelocityInfluence(1, 0, 1);
 
+    this.canFindVehiclesToEnter = true;
+    this.canEnterVehicles = false;
+    this.canLeaveVehicles = true;
+
     this.timer = 0;
   }
 
@@ -33,7 +43,19 @@ export abstract class CharacterStateBase implements ICharacterState {
     this.timer += delta;
   }
 
-  public onInputChange(): void {}
+  public onInputChange(): void {
+    if (
+      this.canFindVehiclesToEnter &&
+      this.character.actions.enter.justPressed
+    ) {
+      this.character.findVehicleToEnter(true);
+    } else if (
+      this.canFindVehiclesToEnter &&
+      this.character.actions.enter_passenger.justPressed
+    ) {
+      this.character.findVehicleToEnter(false);
+    }
+  }
 
   protected playAnimation(animName: string): void {
     this.animationLength = this.character.getAnimationLength(animName);

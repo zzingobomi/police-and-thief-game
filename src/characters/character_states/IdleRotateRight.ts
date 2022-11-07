@@ -25,6 +25,8 @@ export class IdleRotateRight extends CharacterStateBase {
         Utils.characterStateFactory(StateType.Idle, this.character)
       );
     }
+
+    this.fallInAir();
   }
 
   public onInputChange(): void {
